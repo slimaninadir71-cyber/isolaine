@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { families, getFamily } from "@/lib/catalog";
 import { kitAll, lv, lvSorted, minPpm2, minPrice } from "@/lib/laine";
 import { eur, num } from "@/lib/format";
-import { SITE } from "@/lib/site";
+import { COMPANY, SITE } from "@/lib/site";
 import heroData from "@/lib/data/hero.json";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductCarousel, type Slide } from "@/components/ProductCarousel";
@@ -19,6 +19,27 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   ...(hero?.og ? { openGraph: { images: [{ url: hero.og, width: 1200, height: 630, alt: "Rouleau de laine de verre dans des combles en cours d'isolation" }] } } : {}),
 };
+
+// Réponses reprises de la page Livraison et retours et des CGV : ne rien ajouter qui n'y figure pas.
+const FAQ: { q: string; a: string; link?: { href: string; label: string } }[] = [
+  { q: "Où livrez-vous ?",
+    a: "En France métropolitaine et en Belgique. La livraison est offerte quel que soit le montant de la commande, pour tous les produits livrables. Les produits signalés « Retrait en magasin uniquement » ne sont pas livrés." },
+  { q: "Quel est le délai de livraison ?",
+    a: "Le délai vous est indiqué dans la confirmation de commande. Certains produits approvisionnés sur commande portent un délai d'approvisionnement, affiché sur leur fiche." },
+  { q: "Dois-je payer en ligne ?",
+    a: "Non. Aucun paiement n'est demandé à l'envoi de la commande. Nous vérifions la disponibilité, puis nous vous confirmons la livraison et les modalités de règlement." },
+  { q: "Combien de rouleaux ou de palettes faut-il ?",
+    a: "Chaque fiche produit affiche le prix au m² et un calculateur qui indique la quantité nécessaire pour votre surface." },
+  { q: "Je commande pour un chantier, plusieurs palettes : comment faire ?",
+    a: "Demandez un devis en indiquant les références, les quantités, l'adresse de livraison et le délai souhaité.",
+    link: { href: "/contact?type=devis", label: "Demander un devis" } },
+  { q: "Puis-je retourner un produit ?",
+    a: "Si vous êtes un particulier, vous disposez de quatorze jours après réception pour vous rétracter. Les produits sont à retourner complets et dans leur état d'origine, les frais de retour restant à votre charge.",
+    link: { href: "/livraison-retours", label: "Livraison et retours" } },
+  { q: "Les produits sont-ils garantis ?",
+    a: "Oui : garantie légale de conformité (deux ans à compter de la livraison pour les particuliers) et garantie contre les vices cachés.",
+    link: { href: "/cgv", label: "Conditions générales de vente" } },
+];
 
 export default function Home() {
   const priced = lvSorted(lv.filter((p) => p.price != null && p.image && !/r[ée]glette/i.test(p.name)));
@@ -44,6 +65,8 @@ export default function Home() {
           { "@type": "Organization", "@id": `${SITE.url}/#org`, name: SITE.name, url: SITE.url },
           { "@type": "WebSite", "@id": `${SITE.url}/#site`, url: SITE.url, name: SITE.name, inLanguage: "fr-FR", publisher: { "@id": `${SITE.url}/#org` },
             potentialAction: { "@type": "SearchAction", target: `${SITE.url}/recherche?q={search_term_string}`, "query-input": "required name=search_term_string" } },
+          { "@type": "FAQPage", "@id": `${SITE.url}/#faq`,
+            mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
         ],
       }} />
       <Reveal />
@@ -83,6 +106,26 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="proofs2">
+        <div className="wrap proofs2-in">
+          <div><span className="pi"><IconTruck size={20} /></span><p><b>Livraison offerte</b><span>France métropolitaine et Belgique</span></p></div>
+          <div><span className="pi"><IconRuler size={20} /></span><p><b>Prix au m² affiché</b><span>Et calcul des quantités</span></p></div>
+          <div><span className="pi"><IconLayers size={20} /></span><p><b>À l'unité ou à la palette</b><span>Du petit au grand chantier</span></p></div>
+          <div><span className="pi"><IconCheck size={20} /></span><p><b>Aucun paiement en ligne</b><span>Règlement après confirmation</span></p></div>
+        </div>
+      </div>
+
+      <section className="section wrap" aria-labelledby="usages" data-reveal>
+        <div className="section-head">
+          <div>
+            <h2 id="usages">Que voulez-vous isoler ?</h2>
+            <p className="section-sub">Choisissez votre chantier, nous affichons les produits adaptés.</p>
+          </div>
+          <Link href="/laine-de-verre" className="link-arrow">Toute la laine de verre <IconChevron size={16} /></Link>
+        </div>
+        <UseTiles />
+      </section>
+
       {slides.length > 3 && (
         <section className="section section-soft cs-section" aria-labelledby="selection">
           <div className="wrap">
@@ -98,26 +141,6 @@ export default function Home() {
         </section>
       )}
 
-      <section className="section wrap" aria-labelledby="usages" data-reveal>
-        <div className="section-head">
-          <div>
-            <h2 id="usages">Que voulez-vous isoler ?</h2>
-            <p className="section-sub">Choisissez votre chantier, nous affichons les produits adaptés.</p>
-          </div>
-          <Link href="/laine-de-verre" className="link-arrow">Toute la laine de verre <IconChevron size={16} /></Link>
-        </div>
-        <UseTiles />
-      </section>
-
-      <div className="proofs2">
-        <div className="wrap proofs2-in">
-          <div><span className="pi"><IconTruck size={20} /></span><p><b>Livraison offerte</b><span>France métropolitaine et Belgique</span></p></div>
-          <div><span className="pi"><IconRuler size={20} /></span><p><b>Prix au m² affiché</b><span>Et calcul des quantités</span></p></div>
-          <div><span className="pi"><IconLayers size={20} /></span><p><b>À l'unité ou à la palette</b><span>Du petit au grand chantier</span></p></div>
-          <div><span className="pi"><IconCheck size={20} /></span><p><b>Commande confirmée</b><span>Disponibilité vérifiée avant règlement</span></p></div>
-        </div>
-      </div>
-
       {kit.length > 0 && (
         <section className="section wrap" aria-labelledby="pose" data-reveal>
           <div className="section-head">
@@ -130,8 +153,6 @@ export default function Home() {
           <div className="grid grid-4 swipe">{kit.map((p) => <ProductCard key={p.slug} p={p} />)}</div>
         </section>
       )}
-
-      <div className="wrap section" data-reveal><LvGuide /></div>
 
       <section className="section wrap" aria-labelledby="commander" id="comment-commander" data-reveal>
         <div className="order-band">
@@ -148,6 +169,46 @@ export default function Home() {
           </ol>
         </div>
       </section>
+
+      <section className="section wrap" aria-labelledby="vendeur" data-reveal>
+        <div className="trust">
+          <div className="trust-intro">
+            <h2 id="vendeur">Qui vous livre ?</h2>
+            <p>{SITE.name} est l'enseigne en ligne de {COMPANY.legalName}, {COMPANY.form.split(" (")[0].toLowerCase()} immatriculée
+              au RCS de {COMPANY.rcs.replace(/^RCS /, "").replace(/ \d.*$/, "")} (SIREN {COMPANY.siren}), {COMPANY.address.replace(/, France$/, "")}.</p>
+          </div>
+          <ul className="trust-list">
+            {brands.length > 0 && <li><IconCheck size={18} /><span>Laine de verre de marque {brands.join(" et ")}, avec épaisseur, résistance R et prix au m² sur chaque fiche.</span></li>}
+            <li><IconCheck size={18} /><span>Commande sans paiement : nous vérifions la disponibilité et confirmons la livraison avant tout règlement.</span></li>
+            <li><IconCheck size={18} /><span>Rétractation de 14 jours pour les particuliers et garantie légale de conformité de 2 ans.</span></li>
+          </ul>
+          <p className="trust-links">
+            <Link href="/mentions-legales">Mentions légales</Link>
+            <Link href="/cgv">Conditions de vente</Link>
+            <Link href="/livraison-retours">Livraison et retours</Link>
+          </p>
+        </div>
+      </section>
+
+      <section className="section wrap" aria-labelledby="faq" data-reveal>
+        <div className="section-head">
+          <div>
+            <h2 id="faq">Questions fréquentes</h2>
+            <p className="section-sub">Livraison, paiement, retours : l'essentiel avant de commander.</p>
+          </div>
+          <Link href="/contact" className="link-arrow">Une autre question ? <IconChevron size={16} /></Link>
+        </div>
+        <div className="faq">
+          {FAQ.map((f) => (
+            <details key={f.q} className="faq-item">
+              <summary><span>{f.q}</span><IconChevron size={18} /></summary>
+              <div className="faq-a"><p>{f.a}</p>{f.link && <Link href={f.link.href} className="link-arrow">{f.link.label} <IconChevron size={14} /></Link>}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <div className="wrap section" data-reveal><LvGuide /></div>
 
       <section className="section wrap rayons" aria-labelledby="rayons" data-reveal>
         <h2 id="rayons">Nos autres rayons</h2>

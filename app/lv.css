@@ -197,6 +197,23 @@ h2 { font-weight: 700; }
 .steps-light li { background: var(--surface); border-color: transparent; }
 .rayons .rayon-h { margin-top: 6px; }
 
+.trust { display: grid; gap: 18px; padding: 26px 20px; border-radius: 20px; border: 1px solid var(--line-2); background: var(--surface); }
+.trust-intro h2 { margin-bottom: 8px; }
+.trust-intro p { color: var(--ink-2); max-width: 60ch; margin: 0; }
+.trust-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.trust-list li { display: flex; gap: 10px; align-items: flex-start; }
+.trust-list svg { flex: none; margin-top: 2px; color: var(--green); }
+.trust-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; font-size: .9rem; }
+
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq-item { border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface); }
+.faq-item summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px; font-weight: 650; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary svg { flex: none; transform: rotate(90deg); transition: transform .2s; color: var(--muted); }
+.faq-item[open] summary svg { transform: rotate(-90deg); }
+.faq-a { padding: 0 16px 14px; color: var(--ink-2); }
+.faq-a p { margin: 0 0 8px; }
+
 /* Mouvement : entrée du héros et apparition au défilement (désactivés si l'utilisateur a réduit les animations) */
 @media (prefers-reduced-motion: no-preference) {
   .hero2-media img { animation: hero-zoom 2.2s cubic-bezier(.2, .7, .2, 1) both; }
@@ -230,6 +247,8 @@ h2 { font-weight: 700; }
   .cs-card { width: 268px; }
   .cs-ctrl { justify-content: flex-end; max-width: 1240px; margin: 12px auto 0; padding: 0 16px; }
   .order-band { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: center; padding: 40px 44px; gap: 40px; }
+  .trust { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; padding: 36px 44px; gap: 18px 40px; }
+  .trust-links { grid-column: 1 / -1; }
   .steps-light { grid-template-columns: 1fr; gap: 10px; }
   .steps-light li { padding: 14px 16px; align-items: center; }
 }
