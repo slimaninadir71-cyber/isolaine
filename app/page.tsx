@@ -1,18 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { families, getFamily } from "@/lib/catalog";
-import { kitAll, lv, lvSorted, minPpm2, minPrice } from "@/lib/laine";
-import { eur, num } from "@/lib/format";
+import { families, products } from "@/lib/catalog";
+import { kitAll, lv, lvOf, lvSorted, minPpm2 } from "@/lib/laine";
+import { eur } from "@/lib/format";
 import { COMPANY, SITE } from "@/lib/site";
+import type { Card } from "@/lib/types";
 import heroData from "@/lib/data/hero.json";
-import { ProductCard } from "@/components/ProductCard";
-import { ProductCarousel, type Slide } from "@/components/ProductCarousel";
 import { Reveal } from "@/components/Reveal";
 import { JsonLd } from "@/components/Breadcrumbs";
-import { LvGuide, UseTiles } from "@/components/LvBlocks";
 import { FaqList, OrderSteps } from "@/components/Trust";
+import { TopProducts, type TopTab } from "@/components/TopProducts";
 import { FAQ } from "@/lib/faq";
-import { IconCheck, IconChevron, IconClock, IconQuote, IconRuler, IconTruck } from "@/components/Icons";
+import { IconCheck, IconChevron, IconQuote } from "@/components/Icons";
 
 type Hero = { w: number; h: number; h800?: number; src: string; avif: string; webp: string; og: string };
 const hero = heroData as unknown as Hero | null;
@@ -22,21 +21,43 @@ export const metadata: Metadata = {
   ...(hero?.og ? { openGraph: { images: [{ url: hero.og, width: 1200, height: 630, alt: "Rouleau de laine de verre dans des combles en cours d'isolation" }] } } : {}),
 };
 
+/** Un produit par épaisseur, dans l'ordre donné. */
+const byThickness = (list: Card[], n: number) => {
+  const seen = new Set<number | null>();
+  return list.filter((p) => !seen.has(p.thickness) && (seen.add(p.thickness), true)).slice(0, n);
+};
+/** Alterne les listes (un de chaque, puis le suivant…) sans doublon. */
+const mix = (lists: Card[][], n: number) => {
+  const out = new Map<string, Card>();
+  for (let i = 0; out.size < n && lists.some((l) => i < l.length); i++) for (const l of lists) if (l[i] && out.size < n) out.set(l[i].slug, l[i]);
+  return [...out.values()];
+};
+
 export default function Home() {
-  const priced = lvSorted(lv.filter((p) => p.price != null && p.image && !/r[ée]glette/i.test(p.name)));
-  const slides: Slide[] = priced.slice(0, 18).map((p) => ({
-    slug: p.slug, name: p.name, brand: p.brand, image: p.image, price: p.price, priceMax: p.priceMax, variable: p.variable,
-    ppm2: p.ppm2, thickness: p.thickness, r: p.r, facing: p.facing, cu: p.cu,
-  }));
-  const kit = kitAll().filter((p) => p.image && p.price != null).slice(0, 4);
+  const ok = (p: Card) => p.price != null && !!p.image && !/r[ée]glette/i.test(p.name);
+  const rolls = byThickness(lvSorted(lv.filter((p) => ok(p) && p.cu === "rouleau")), 8);
+  const pallets = byThickness([...lv.filter((p) => ok(p) && p.cu === "palette")].sort((a, b) => (a.ppm2 ?? 1e9) - (b.ppm2 ?? 1e9)), 8);
+  const rock = products.filter((p) => p.sub === "laine-de-roche" && ok(p) && /laine de roche/i.test(p.name));
+  const tabs: TopTab[] = [
+    { key: "tous", label: "Tous", items: mix([rolls, pallets, rock], 8) },
+    { key: "verre", label: "Laine de verre", items: mix([rolls, pallets], 8) },
+    { key: "roche", label: "Laine de roche", items: rock.slice(0, 8) },
+    { key: "rouleaux", label: "Rouleaux", items: rolls },
+    { key: "palettes", label: "Palettes", items: pallets },
+  ].filter((t) => t.items.length > 0);
+
   const m2 = minPpm2(lv);
-  const roll = minPrice(lv.filter((p) => p.cu === "rouleau"));
-  const palMax = Math.max(0, ...lv.filter((p) => p.cu === "palette").map((p) => p.m2 ?? 0));
   const brands = [...new Set(lv.map((p) => p.brand).filter(Boolean))];
-  const isolants = getFamily("isolants");
-  const otherIso = isolants?.subs.filter((s) => s.slug !== "laine-de-verre") ?? [];
-  const others = families.filter((f) => f.slug !== "isolants");
   const total = families.reduce((n, f) => n + f.count, 0);
+  const img = (list: Card[]) => list.find((p) => p.image)?.image ?? "";
+  const cats = [
+    { href: "/laine-de-verre", label: "Laine de verre", image: img(lvOf("combles")) },
+    { href: "/categorie/isolants/laine-de-roche", label: "Laine de roche", image: img(rock) },
+    { href: "/laine-de-verre?vente=unite", label: "Rouleaux à l'unité", image: img(rolls) },
+    { href: "/laine-de-verre?vente=palette&tri=m2", label: "Palettes", image: img(pallets) },
+    { href: "/laine-de-verre/laine-a-souffler", label: "Laine à souffler", image: img(lvOf("souffler")) },
+    { href: "/laine-de-verre/materiel-de-pose", label: "Matériel de pose", image: img(kitAll()) },
+  ];
 
   return (
     <>
@@ -52,99 +73,81 @@ export default function Home() {
       }} />
       <Reveal />
 
-      <section className={`hero2${hero ? "" : " hero2-plain"}`}>
-        {hero && (
-          <div className="hero2-media">
-            <picture>
+      <nav className="wrap cats" aria-label="Nos rayons">
+        {cats.map((c) => (
+          <Link key={c.href} href={c.href} className="cat">
+            <span className="cat-img">{c.image ? <img src={c.image} alt="" decoding="async" /> : null}</span>
+            <span className="cat-name">{c.label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <section className="wrap hb-wrap">
+        <div className="hb">
+          {hero && (
+            <picture className="hb-media">
               {hero.avif && <source type="image/avif" srcSet={hero.avif} sizes="100vw" />}
               {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="100vw" />}
-              <img src={hero.src} alt="Rouleau de laine de verre déroulé dans des combles en cours d'isolation" width={hero.w} height={hero.h}
-                fetchPriority="high" decoding="async" />
+              <img src={hero.src} alt="Rouleau de laine de verre déroulé dans des combles en cours d'isolation" width={hero.w} height={hero.h} fetchPriority="high" decoding="async" />
             </picture>
-            <div className="hero2-badges">
-              {m2 != null && <span className="chip-price"><small>Dès</small><b>{eur(m2)}</b><small>le m²</small></span>}
-              {roll != null && <span className="chip-price chip-alt"><small>Rouleau dès</small><b>{eur(roll)}</b></span>}
-            </div>
-          </div>
-        )}
-        <div className="wrap hero2-body">
-          <div className="hero2-txt">
-            <p className="eyebrow">Laine de verre {brands.join(" · ")}</p>
-            <h1>La laine de verre livrée chez vous, sans frais de livraison.</h1>
-            <p className="hero2-lead">
-              Rouleaux pour combles, panneaux pour murs, laine à souffler : comparez les épaisseurs et le prix au m²,
-              commandez à l'unité ou à la palette.
-            </p>
-            <div className="cta-row">
-              <Link href="/laine-de-verre" className="btn btn-primary btn-lg">Voir la laine de verre <IconChevron size={18} /></Link>
-              <Link href="/contact?type=devis" className="btn btn-ghost btn-lg"><IconQuote size={18} /> <span className="lg-only">Devis chantier</span><span className="sm-only">Devis</span></Link>
-            </div>
-            <div className="hero2-chips">
-              {m2 != null && <span className="chip-price"><small>Dès</small><b>{eur(m2)}</b><small>le m²</small></span>}
-              {roll != null && <span className="chip-price chip-alt"><small>Rouleau à l'unité dès</small><b>{eur(roll)}</b></span>}
+          )}
+          <div className="hb-txt">
+            <p className="hb-eyebrow">Livraison offerte · expédition sous 24 h</p>
+            <h1>La laine de verre et la laine de roche, livrées chez vous.</h1>
+            {m2 != null && <p className="hb-price">Dès <b>{eur(m2)}</b> le m²</p>}
+            <div className="hb-cta">
+              <a href="#produits" className="btn btn-primary btn-lg">Voir les produits <IconChevron size={18} /></a>
+              <Link href="/contact?type=devis" className="btn btn-light btn-lg"><IconQuote size={18} /> Devis chantier</Link>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="proofs2">
-        <div className="wrap proofs2-in">
-          <div><span className="pi"><IconTruck size={20} /></span><p><b>Livraison offerte</b><span>France métropolitaine et Belgique</span></p></div>
-          <div><span className="pi"><IconRuler size={20} /></span><p><b>Prix au m² affiché</b><span>Et calcul des quantités</span></p></div>
-          <div><span className="pi"><IconClock size={20} /></span><p><b>Expédition sous 24 h</b><span>Dès réception du règlement</span></p></div>
-          <div><span className="pi"><IconCheck size={20} /></span><p><b>Aucun paiement en ligne</b><span>Règlement après confirmation</span></p></div>
+      <section className="section wrap" id="produits" aria-labelledby="top">
+        <h2 id="top" className="top-h">Nos produits phares</h2>
+        <p className="top-sub">Rouleaux et palettes, avec le prix au m² et la livraison offerte.</p>
+        <TopProducts tabs={tabs} />
+        <div className="top-more">
+          <Link href="/laine-de-verre" className="btn btn-ghost">Toute la laine de verre <IconChevron size={16} /></Link>
+          <Link href="/boutique" className="btn btn-ghost">Tout le catalogue ({total}) <IconChevron size={16} /></Link>
         </div>
-      </div>
-
-      <section className="section wrap" aria-labelledby="usages" data-reveal>
-        <div className="section-head">
-          <div>
-            <h2 id="usages">Que voulez-vous isoler ?</h2>
-            <p className="section-sub">Choisissez votre chantier, nous affichons les produits adaptés.</p>
-          </div>
-          <Link href="/laine-de-verre" className="link-arrow">Toute la laine de verre <IconChevron size={16} /></Link>
-        </div>
-        <UseTiles />
       </section>
 
-      {slides.length > 3 && (
-        <section className="section section-soft cs-section" aria-labelledby="selection">
-          <div className="wrap">
-            <div className="section-head">
-              <div>
-                <h2 id="selection">Nos laines de verre</h2>
-                <p className="section-sub">Rouleaux, panneaux et palettes{palMax > 0 ? <> jusqu'à {num(palMax)} m²</> : null}, avec le prix au m².</p>
-              </div>
-              <Link href="/laine-de-verre?vente=palette&tri=m2" className="link-arrow">Comparer les palettes <IconChevron size={16} /></Link>
-            </div>
+      <section className="section wrap" aria-labelledby="s30" data-reveal>
+        <div className="s30">
+          <div className="s30-txt">
+            <p className="s30-eyebrow">{SITE.name} en 30 secondes</p>
+            <h2 id="s30">L'isolant livré devant chez vous, sans frais de livraison.</h2>
+            <p>Rouleaux pour les combles, panneaux pour les murs, laine à souffler : à l'unité pour un petit chantier, à la palette pour un grand.</p>
+            <ul className="s30-list">
+              <li><IconCheck size={20} /> Livraison offerte en France métropolitaine et en Belgique</li>
+              <li><IconCheck size={20} /> {SITE.shipping}</li>
+              <li><IconCheck size={20} /> Aucun paiement en ligne : règlement après confirmation</li>
+              {brands.length > 0 && <li><IconCheck size={20} /> Laine de verre {brands.join(" et ")}, prix au m² affiché</li>}
+            </ul>
           </div>
-          <ProductCarousel items={slides} label="Sélection de laines de verre" />
-        </section>
-      )}
-
-      {kit.length > 0 && (
-        <section className="section wrap" aria-labelledby="pose" data-reveal>
-          <div className="section-head">
-            <div>
-              <h2 id="pose">Tout pour la pose</h2>
-              <p className="section-sub">Pare-vapeur, couteaux, accessoires de combles : à ajouter à la même commande.</p>
-            </div>
-            <Link href="/laine-de-verre/materiel-de-pose" className="link-arrow">Tout le matériel de pose <IconChevron size={16} /></Link>
-          </div>
-          <div className="grid grid-4 swipe">{kit.map((p) => <ProductCard key={p.slug} p={p} />)}</div>
-        </section>
-      )}
+          {hero && (
+            <picture className="s30-media">
+              {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="(min-width: 1000px) 560px, 100vw" />}
+              <img src={hero.src} alt="" width={hero.w} height={hero.h} loading="lazy" decoding="async" />
+            </picture>
+          )}
+        </div>
+      </section>
 
       <section className="section wrap" aria-labelledby="commander" id="comment-commander" data-reveal>
         <div className="order-band">
           <div className="order-intro">
             <h2 id="commander">Commander simplement</h2>
-            <p>Aucun paiement en ligne : nous confirmons la disponibilité et la livraison avant tout règlement.
-              Pour plusieurs palettes, demandez un devis.</p>
-            <Link href="/contact?type=devis" className="btn btn-primary"><IconQuote size={18} /> Demander un devis</Link>
+            <p>Nous confirmons la disponibilité et la livraison avant tout règlement. Pour plusieurs palettes, demandez un devis.</p>
           </div>
           <OrderSteps />
         </div>
+      </section>
+
+      <section className="section wrap" aria-labelledby="faq" data-reveal>
+        <h2 id="faq" className="top-h">Questions fréquentes</h2>
+        <FaqList items={FAQ} />
       </section>
 
       <section className="section wrap" aria-labelledby="vendeur" data-reveal>
@@ -155,7 +158,6 @@ export default function Home() {
               au RCS de {COMPANY.rcs.replace(/^RCS /, "").replace(/ \d.*$/, "")} (SIREN {COMPANY.siren}), {COMPANY.address.replace(/, France$/, "")}.</p>
           </div>
           <ul className="trust-list">
-            {brands.length > 0 && <li><IconCheck size={18} /><span>Laine de verre de marque {brands.join(" et ")}, avec épaisseur, résistance R et prix au m² sur chaque fiche.</span></li>}
             <li><IconCheck size={18} /><span>Commande sans paiement : nous vérifions la disponibilité et confirmons la livraison avant tout règlement.</span></li>
             <li><IconCheck size={18} /><span>Rétractation de 14 jours pour les particuliers et garantie légale de conformité de 2 ans.</span></li>
           </ul>
@@ -165,38 +167,6 @@ export default function Home() {
             <Link href="/livraison-retours">Livraison et retours</Link>
           </p>
         </div>
-      </section>
-
-      <section className="section wrap" aria-labelledby="faq" data-reveal>
-        <div className="section-head">
-          <div>
-            <h2 id="faq">Questions fréquentes</h2>
-            <p className="section-sub">Livraison, paiement, retours : l'essentiel avant de commander.</p>
-          </div>
-          <Link href="/contact" className="link-arrow">Une autre question ? <IconChevron size={16} /></Link>
-        </div>
-        <FaqList items={FAQ} />
-      </section>
-
-      <div className="wrap section" data-reveal><LvGuide /></div>
-
-      <section className="section wrap rayons" aria-labelledby="rayons" data-reveal>
-        <h2 id="rayons">Nos autres rayons</h2>
-        {otherIso.length > 0 && (
-          <div className="rayon">
-            <p className="rayon-h">Autres isolants</p>
-            <div className="near-list">
-              {otherIso.map((s) => <Link key={s.slug} href={`/categorie/isolants/${s.slug}`}>{s.name} <small>{s.count}</small></Link>)}
-            </div>
-          </div>
-        )}
-        <div className="rayon">
-          <p className="rayon-h">Façade, plâtrerie et chantier</p>
-          <div className="near-list">
-            {others.map((f) => <Link key={f.slug} href={`/categorie/${f.slug}`}>{f.name} <small>{f.count}</small></Link>)}
-          </div>
-        </div>
-        <Link href="/boutique" className="btn btn-ghost btn-block rayons-all">Voir tous nos produits ({total}) <IconChevron size={16} /></Link>
       </section>
     </>
   );

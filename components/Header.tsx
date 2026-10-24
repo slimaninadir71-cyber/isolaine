@@ -10,6 +10,9 @@ import { Logo } from "./Logo";
 import { SearchBox } from "./SearchBox";
 import { IconCart, IconChevron, IconChevronDown, IconClose, IconMenu, IconQuote, IconSearch, IconTruck } from "./Icons";
 
+// Messages du bandeau défilant : uniquement des engagements réels
+const TOPBAR = [SITE.delivery, SITE.shipping, "Aucun paiement en ligne : règlement après confirmation", "Prix au m² affiché sur chaque produit", "Chantier, palette, grande quantité : devis sur demande"];
+
 export default function Header({ families }: { families: NavFamily[] }) {
   const { count, ready } = useCart();
   const pathname = usePathname();
@@ -42,9 +45,12 @@ export default function Header({ families }: { families: NavFamily[] }) {
     <>
       <a href="#contenu" className="skip">Aller au contenu</a>
       <div className="topbar">
-        <div className="wrap topbar-in">
-          <span><IconTruck size={16} /> <span className="tb-long">{SITE.delivery} · {SITE.shipping.toLowerCase()}</span><span className="tb-short">Livraison offerte · expédition sous 24 h</span></span>
-          <Link href="/contact?type=devis" className="topbar-link">Chantier, palette, grande quantité : demandez un devis</Link>
+        <div className="tb-track">
+          {[0, 1].map((k) => (
+            <p key={k} className="tb-msgs" aria-hidden={k === 1 || undefined}>
+              {TOPBAR.map((m) => <span key={m}><IconTruck size={15} /> {m}</span>)}
+            </p>
+          ))}
         </div>
       </div>
       <header className="hdr">
@@ -52,7 +58,7 @@ export default function Header({ families }: { families: NavFamily[] }) {
           <button type="button" className="hdr-burger" aria-label="Ouvrir le menu" aria-expanded={drawer} aria-controls="menu-mobile" onClick={() => setDrawer(true)}>
             <IconMenu size={24} />
           </button>
-          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil"><Logo /></Link>
+          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil"><Logo light /></Link>
           <div className="hdr-search"><SearchBox /></div>
           <nav className="hdr-actions" aria-label="Accès rapides">
             <button type="button" className="hdr-act hdr-sbtn" aria-label="Rechercher un produit" onClick={findSearch}><IconSearch size={22} /></button>
@@ -73,7 +79,8 @@ export default function Header({ families }: { families: NavFamily[] }) {
               <Link key={u.key} href={`/laine-de-verre/${u.slug}`} className={`hdr-nav-link${pathname === `/laine-de-verre/${u.slug}` ? " on" : ""}`}>{u.nav}</Link>
             ))}
             <Link href="/laine-de-verre/materiel-de-pose" className={`hdr-nav-link${pathname === "/laine-de-verre/materiel-de-pose" ? " on" : ""}`}>Matériel de pose</Link>
-            <Link href="/categorie/isolants" className={`hdr-nav-link${pathname?.startsWith("/categorie/isolants") ? " on" : ""}`}>Autres isolants</Link>
+            <Link href="/categorie/isolants/laine-de-roche" className={`hdr-nav-link${pathname === "/categorie/isolants/laine-de-roche" ? " on" : ""}`}>Laine de roche</Link>
+            <Link href="/categorie/isolants" className={`hdr-nav-link${pathname === "/categorie/isolants" ? " on" : ""}`}>Autres isolants</Link>
             <Link href="/livraison-retours" className="hdr-nav-link hdr-nav-end">Livraison offerte</Link>
           </div>
           {mega && (
@@ -111,6 +118,7 @@ export default function Header({ families }: { families: NavFamily[] }) {
             {LV_USES.map((u) => (
               <Link key={u.key} href={`/laine-de-verre/${u.slug}`} className={`qpill${pathname === `/laine-de-verre/${u.slug}` ? " on" : ""}`}>{u.nav}</Link>
             ))}
+            <Link href="/categorie/isolants/laine-de-roche" className={`qpill${pathname === "/categorie/isolants/laine-de-roche" ? " on" : ""}`}>Laine de roche</Link>
             <Link href="/laine-de-verre/materiel-de-pose" className={`qpill${pathname === "/laine-de-verre/materiel-de-pose" ? " on" : ""}`}>Matériel de pose</Link>
           </div>
         </nav>
