@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 };
 
-export const viewport: Viewport = { themeColor: "#0f2233", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#24453a", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

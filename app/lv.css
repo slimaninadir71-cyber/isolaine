@@ -477,3 +477,33 @@ h2 { font-weight: 700; }
   .top-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
   .s30 { grid-template-columns: 1fr 1fr; align-items: center; gap: 40px; padding: 40px 44px; }
 }
+
+/* ===== Palette « Forêt et lin » (24 octobre 2026) : vert sapin, jaune blé, fond lin ===== */
+:root {
+  --hdr: #24453a;
+  --ink: #1f2d27;
+  --ink-2: #3d4a43;
+  --muted: #66716a;
+  --bg: #f6f3ea;
+  --sand: #eee8d8;
+  --sun: #fbf0cf;
+  --line: #e2ddcf;
+  --line-2: #ece7da;
+  --accent: #e9b949;
+  --accent-2: #d9a632;
+  --accent-ink: #3a2c05;
+  --green: #2f6b4f;
+  --blue: #2c6a55;
+}
+.topbar, .topbar svg { color: var(--accent-ink); }
+.hb-eyebrow { color: var(--accent-ink); }
+.hdr-nav-lv, .hdr-nav-lv:hover, .hdr-nav-lv.on { color: var(--accent-ink); }
+.hdr .logo-light .logo-bg { color: #2f5848; }
+.btn-primary:hover { box-shadow: 0 6px 18px rgba(217, 166, 50, .3); }
+.cat-img { border-color: #e6dcc0; }
+.s30-eyebrow { color: #8a6a12; }
+.ftr { background: #1c3a30; color: #cfdcd4; }
+.ftr a { color: #cfdcd4; }
+.ftr-small, .ftr-bottom { color: #a3b8ac; }
+.ftr-bottom { border-top-color: #2c5245; }
+.ask-fab { background: var(--hdr); }
