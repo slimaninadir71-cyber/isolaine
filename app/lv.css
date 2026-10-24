@@ -214,6 +214,27 @@ h2 { font-weight: 700; }
 .faq-a { padding: 0 16px 14px; color: var(--ink-2); }
 .faq-a p { margin: 0 0 8px; }
 
+/* Déroulé de commande illustré */
+.osteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.osteps li { position: relative; display: grid; grid-template-columns: 96px 1fr; grid-template-areas: "art t" "art d"; column-gap: 14px; align-items: center; padding: 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line-2); }
+.osteps-art { grid-area: art; display: block; border-radius: 12px; background: var(--sun); }
+.osteps-art svg { display: block; width: 100%; height: auto; }
+.osteps-n { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 99px; background: var(--ink); color: #fff; font-weight: 800; font-size: .8rem; display: grid; place-items: center; }
+.osteps b { grid-area: t; align-self: end; font-size: 1rem; }
+.osteps p { grid-area: d; align-self: start; margin: 2px 0 0; color: var(--ink-2); font-size: .9rem; line-height: 1.45; }
+.pdp-how { margin-top: 8px; }
+.pdp-faq-h { margin: 22px 0 10px; }
+
+/* Bouton « Une question ? » */
+.ask-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 35; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 18px; border-radius: 99px; background: var(--ink); color: #fff; font-weight: 700; font-size: .95rem; text-decoration: none; box-shadow: var(--shadow-lg); transition: transform .15s; }
+.ask-fab:hover { transform: translateY(-2px); color: #fff; }
+
+/* Cartes produit : nom sur deux lignes, gros bouton d'achat sur toute la largeur */
+.pcard-name a { -webkit-line-clamp: 2; }
+.pcard-foot { flex-direction: column; align-items: stretch; gap: 8px; }
+.pcard-foot .btn { width: 100%; min-height: 44px; }
+.pcard .btn-sm span { display: inline; }
+
 /* Mouvement : entrée du héros et apparition au défilement (désactivés si l'utilisateur a réduit les animations) */
 @media (prefers-reduced-motion: no-preference) {
   .hero2-media img { animation: hero-zoom 2.2s cubic-bezier(.2, .7, .2, 1) both; }
@@ -249,6 +270,11 @@ h2 { font-weight: 700; }
   .order-band { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: center; padding: 40px 44px; gap: 40px; }
   .trust { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; padding: 36px 44px; gap: 18px 40px; }
   .trust-links { grid-column: 1 / -1; }
+  .order-band:has(.osteps) { grid-template-columns: 1fr; gap: 26px; }
+  .osteps { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .osteps li { grid-template-columns: 1fr; grid-template-areas: "art" "t" "d"; row-gap: 6px; padding: 14px; }
+  .osteps-art { margin-bottom: 6px; }
+  .osteps-art svg { max-height: 130px; margin: 0 auto; }
   .steps-light { grid-template-columns: 1fr; gap: 10px; }
   .steps-light li { padding: 14px 16px; align-items: center; }
 }
@@ -272,6 +298,7 @@ h2 { font-weight: 700; }
 
 @media (max-width: 999px) {
   .hdr-actions .hdr-sbtn { display: inline-flex; }
+  body:has(.sticky-buy) .ask-fab { bottom: calc(80px + env(safe-area-inset-bottom)); }
   .rm:not(.open) { max-height: 300px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); }
   .grid-row, .swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; margin-left: -16px; margin-right: -16px; padding: 4px 16px 14px; scroll-padding-inline: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .grid-row::-webkit-scrollbar, .swipe::-webkit-scrollbar { display: none; }
@@ -287,6 +314,8 @@ h2 { font-weight: 700; }
   .tb-short, .sm-only, .topbar .tb-short { display: inline; }
   .hdr-actions > a.hdr-act:not(.hdr-cart) { display: none; }
 
+  .hero2-media { aspect-ratio: 16 / 8; }
+  .ask-fab { right: 12px; min-height: 44px; padding: 8px 14px; font-size: .9rem; }
   .hero2-badges { display: flex; flex-wrap: wrap; gap: 6px; position: absolute; left: 12px; bottom: 34px; z-index: 1; }
   .hero2-badges .chip-price { background: rgba(255, 244, 209, .96); box-shadow: 0 4px 14px rgba(0, 0, 0, .14); }
   .hero2-badges .chip-alt { background: rgba(255, 255, 255, .95); }
@@ -339,8 +368,6 @@ h2 { font-weight: 700; }
   .pcard-img { aspect-ratio: 4 / 3; }
   .pcard-body { padding: 10px 10px 12px; }
   .pcard-name { font-size: .9rem; }
-  .pcard-foot { flex-wrap: nowrap; align-items: flex-end; }
-  .pcard-foot .btn-sm.btn-primary { flex: none; width: 42px; height: 42px; min-height: 0; padding: 0; justify-content: center; }
 
   .ptable { min-width: 0; }
   .ptable thead { display: none; }

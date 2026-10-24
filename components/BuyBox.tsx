@@ -128,6 +128,6 @@ function Delivery({ pickup, lead }: { pickup: boolean; lead: string }) {
   return pickup ? (
     <div className="buy-ship pickup"><IconStore size={20} /><p><b>Retrait en magasin uniquement</b>{lead && <><br />Délai d'approvisionnement : {lead}</>}</p></div>
   ) : (
-    <div className="buy-ship"><IconTruck size={20} /><p><b>Livraison offerte</b><br />{SITE.delivery.replace("Livraison offerte ", "")}{lead ? ` · délai d'approvisionnement : ${lead}` : ""}</p></div>
+    <div className="buy-ship"><IconTruck size={20} /><p><b>Livraison offerte</b> {SITE.delivery.replace("Livraison offerte ", "")}<br />{lead ? `Délai d'approvisionnement : ${lead}` : <b>{SITE.shipping}</b>}</p></div>
   );
 }

@@ -23,4 +23,6 @@ export const IconRoof = ({ size, className }: P) => (<svg {...base(size)} classN
 export const IconWall = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M3 5h18v14H3zM3 9.7h18M3 14.3h18M9 5v4.7M15 9.7v4.6M9 14.3V19M17 5v4.7" /></svg>);
 export const IconWind = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7" /></svg>);
 export const IconTool = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="m14.5 5.5 4 4M4 20l9.5-9.5M13 7l3-3 4 4-3 3z" /></svg>);
-export const IconRuler = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 16 16 4l4 4L8 20z" /><path d="m8 12 2 2M11 9l2 2M14 6l2 2" /></svg>);
+export const IconChat = ({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9.5h8M8 12.5h5" /></svg>);
+export const IconClock = ({ size, className }: P) => (<svg {...base(size)} className={className}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>);
+export const IconRuler =({ size, className }: P) => (<svg {...base(size)} className={className}><path d="M4 16 16 4l4 4L8 20z" /><path d="m8 12 2 2M11 9l2 2M14 6l2 2" /></svg>);

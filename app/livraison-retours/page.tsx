@@ -28,8 +28,8 @@ export default function Page() {
       <h2>Livraison</h2>
       <p>
         La livraison est offerte en France métropolitaine et en Belgique, quel que soit le montant de la commande, pour tous les produits
-        livrables. Le délai vous est indiqué dans la confirmation de commande. Certains produits approvisionnés sur commande portent un
-        délai d'approvisionnement, affiché sur leur fiche.
+        livrables. La marchandise est expédiée sous 24 heures après réception du règlement ; le délai vous est rappelé dans la
+        confirmation de commande. Certains produits approvisionnés sur commande portent un délai d'approvisionnement, affiché sur leur fiche.
       </p>
       <p>
         À la réception, vérifiez l'état et le nombre de colis en présence du livreur. En cas d'avarie ou de manquant, notez des réserves

@@ -9,6 +9,7 @@ import { navFamilies } from "@/lib/catalog";
 import { SITE } from "@/lib/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { AskButton } from "@/components/AskButton";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Header families={navFamilies} />
           <main id="contenu" tabIndex={-1}>{children}</main>
           <Footer families={navFamilies} />
+          <AskButton />
         </CartProvider>
         <Analytics />
       </body>

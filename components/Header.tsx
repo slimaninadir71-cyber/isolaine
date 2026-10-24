@@ -43,7 +43,7 @@ export default function Header({ families }: { families: NavFamily[] }) {
       <a href="#contenu" className="skip">Aller au contenu</a>
       <div className="topbar">
         <div className="wrap topbar-in">
-          <span><IconTruck size={16} /> <span className="tb-long">{SITE.delivery}</span><span className="tb-short">Livraison offerte : France métropolitaine et Belgique</span></span>
+          <span><IconTruck size={16} /> <span className="tb-long">{SITE.delivery} · {SITE.shipping.toLowerCase()}</span><span className="tb-short">Livraison offerte · expédition sous 24 h</span></span>
           <Link href="/contact?type=devis" className="topbar-link">Chantier, palette, grande quantité : demandez un devis</Link>
         </div>
       </div>

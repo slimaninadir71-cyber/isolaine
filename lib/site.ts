@@ -5,6 +5,8 @@ export const SITE = {
   domain: "iso-laine.com",
   tagline: "Laine de verre, isolants et matériaux de façade",
   delivery: "Livraison offerte en France métropolitaine et en Belgique",
+  // Délai annoncé par l'exploitant (24 octobre 2026) : départ de la marchandise une fois le règlement reçu
+  shipping: "Expédition sous 24 h après réception du règlement",
 };
 
 export const COMPANY = {

@@ -11,6 +11,8 @@ import { BuyBox } from "@/components/BuyBox";
 import { ProductCard } from "@/components/ProductCard";
 import { RichText } from "@/components/RichText";
 import { ReadMore } from "@/components/ReadMore";
+import { FaqList, OrderSteps } from "@/components/Trust";
+import { FAQ_PRODUCT } from "@/lib/faq";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -140,6 +142,16 @@ export default async function ProductPage({ params }: Props) {
           )}
         </section>
       </div>
+
+      <section className="section-tight pdp-how" aria-labelledby="how">
+        <div className="section-head">
+          <h2 id="how">Comment ça se passe</h2>
+          <Link href="/livraison-retours" className="link-arrow">Livraison et retours</Link>
+        </div>
+        <OrderSteps pickup={p.pickup} lead={d.lead} />
+        <h3 className="pdp-faq-h">Vos questions</h3>
+        <FaqList items={FAQ_PRODUCT} />
+      </section>
 
       {kit.length > 0 && (
         <section className="section-tight" aria-labelledby="kit">

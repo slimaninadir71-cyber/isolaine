@@ -10,7 +10,9 @@ import { ProductCarousel, type Slide } from "@/components/ProductCarousel";
 import { Reveal } from "@/components/Reveal";
 import { JsonLd } from "@/components/Breadcrumbs";
 import { LvGuide, UseTiles } from "@/components/LvBlocks";
-import { IconCheck, IconChevron, IconQuote, IconRuler, IconTruck, IconLayers } from "@/components/Icons";
+import { FaqList, OrderSteps } from "@/components/Trust";
+import { FAQ } from "@/lib/faq";
+import { IconCheck, IconChevron, IconClock, IconQuote, IconRuler, IconTruck } from "@/components/Icons";
 
 type Hero = { w: number; h: number; h800?: number; src: string; avif: string; webp: string; og: string };
 const hero = heroData as unknown as Hero | null;
@@ -19,27 +21,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   ...(hero?.og ? { openGraph: { images: [{ url: hero.og, width: 1200, height: 630, alt: "Rouleau de laine de verre dans des combles en cours d'isolation" }] } } : {}),
 };
-
-// Réponses reprises de la page Livraison et retours et des CGV : ne rien ajouter qui n'y figure pas.
-const FAQ: { q: string; a: string; link?: { href: string; label: string } }[] = [
-  { q: "Où livrez-vous ?",
-    a: "En France métropolitaine et en Belgique. La livraison est offerte quel que soit le montant de la commande, pour tous les produits livrables. Les produits signalés « Retrait en magasin uniquement » ne sont pas livrés." },
-  { q: "Quel est le délai de livraison ?",
-    a: "Le délai vous est indiqué dans la confirmation de commande. Certains produits approvisionnés sur commande portent un délai d'approvisionnement, affiché sur leur fiche." },
-  { q: "Dois-je payer en ligne ?",
-    a: "Non. Aucun paiement n'est demandé à l'envoi de la commande. Nous vérifions la disponibilité, puis nous vous confirmons la livraison et les modalités de règlement." },
-  { q: "Combien de rouleaux ou de palettes faut-il ?",
-    a: "Chaque fiche produit affiche le prix au m² et un calculateur qui indique la quantité nécessaire pour votre surface." },
-  { q: "Je commande pour un chantier, plusieurs palettes : comment faire ?",
-    a: "Demandez un devis en indiquant les références, les quantités, l'adresse de livraison et le délai souhaité.",
-    link: { href: "/contact?type=devis", label: "Demander un devis" } },
-  { q: "Puis-je retourner un produit ?",
-    a: "Si vous êtes un particulier, vous disposez de quatorze jours après réception pour vous rétracter. Les produits sont à retourner complets et dans leur état d'origine, les frais de retour restant à votre charge.",
-    link: { href: "/livraison-retours", label: "Livraison et retours" } },
-  { q: "Les produits sont-ils garantis ?",
-    a: "Oui : garantie légale de conformité (deux ans à compter de la livraison pour les particuliers) et garantie contre les vices cachés.",
-    link: { href: "/cgv", label: "Conditions générales de vente" } },
-];
 
 export default function Home() {
   const priced = lvSorted(lv.filter((p) => p.price != null && p.image && !/r[ée]glette/i.test(p.name)));
@@ -110,7 +91,7 @@ export default function Home() {
         <div className="wrap proofs2-in">
           <div><span className="pi"><IconTruck size={20} /></span><p><b>Livraison offerte</b><span>France métropolitaine et Belgique</span></p></div>
           <div><span className="pi"><IconRuler size={20} /></span><p><b>Prix au m² affiché</b><span>Et calcul des quantités</span></p></div>
-          <div><span className="pi"><IconLayers size={20} /></span><p><b>À l'unité ou à la palette</b><span>Du petit au grand chantier</span></p></div>
+          <div><span className="pi"><IconClock size={20} /></span><p><b>Expédition sous 24 h</b><span>Dès réception du règlement</span></p></div>
           <div><span className="pi"><IconCheck size={20} /></span><p><b>Aucun paiement en ligne</b><span>Règlement après confirmation</span></p></div>
         </div>
       </div>
@@ -162,11 +143,7 @@ export default function Home() {
               Pour plusieurs palettes, demandez un devis.</p>
             <Link href="/contact?type=devis" className="btn btn-primary"><IconQuote size={18} /> Demander un devis</Link>
           </div>
-          <ol className="steps steps-light">
-            <li><span>1</span><div><b>Composez votre panier</b><p>Choisissez l'épaisseur et la quantité, le calculateur vous aide.</p></div></li>
-            <li><span>2</span><div><b>Validez la commande</b><p>Vos coordonnées et l'adresse de livraison suffisent.</p></div></li>
-            <li><span>3</span><div><b>Nous confirmons</b><p>Disponibilité, date de livraison et modalités de règlement.</p></div></li>
-          </ol>
+          <OrderSteps />
         </div>
       </section>
 
@@ -198,14 +175,7 @@ export default function Home() {
           </div>
           <Link href="/contact" className="link-arrow">Une autre question ? <IconChevron size={16} /></Link>
         </div>
-        <div className="faq">
-          {FAQ.map((f) => (
-            <details key={f.q} className="faq-item">
-              <summary><span>{f.q}</span><IconChevron size={18} /></summary>
-              <div className="faq-a"><p>{f.a}</p>{f.link && <Link href={f.link.href} className="link-arrow">{f.link.label} <IconChevron size={14} /></Link>}</div>
-            </details>
-          ))}
-        </div>
+        <FaqList items={FAQ} />
       </section>
 
       <div className="wrap section" data-reveal><LvGuide /></div>
