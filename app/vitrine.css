@@ -130,15 +130,21 @@ a { color: var(--g7); }
 @media (min-width: 520px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1000px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } .listing-nofilter .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1240px) { .listing .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Téléphone : listes verticales en lignes photo + texte. Les rangées qui défilent (.grid-row, .swipe) gardent des cartes verticales. */
 @media (max-width: 519px) {
-  .grid .pc { display: grid; grid-template-columns: 116px minmax(0, 1fr); }
-  .grid .pc-img { aspect-ratio: auto; border-bottom: 0; border-right: 1px solid #EEF0ED; padding: 10px; }
-  .grid .pc-flag { top: 8px; left: 8px; font-size: 10px; padding: 3px 6px; }
-  .grid .pc-b { padding: 12px 14px 14px; }
-  .grid .pc-name { font-size: 15px; min-height: 0; margin: 2px 0 8px; }
-  .grid .pc-specs { font-size: 12.5px; margin-bottom: 8px; }
-  .grid .pc-big { font-size: 22px; }
-  .grid .pc-act { margin-top: 10px; }
+  .grid:not(.grid-row) .pc { display: grid; grid-template-columns: 112px minmax(0, 1fr); }
+  .grid:not(.grid-row) .pc-img { aspect-ratio: auto; border-bottom: 0; border-right: 1px solid #EEF0ED; padding: 34px 8px 10px; }
+  .grid:not(.grid-row) .pc-tags { top: 6px; left: 6px; right: 6px; }
+  .grid:not(.grid-row) .pc-b { padding: 12px 14px 14px; }
+  .grid:not(.grid-row) .pc-name { font-size: 15px; min-height: 0; margin: 2px 0 8px; }
+  .grid:not(.grid-row) .pc-specs { font-size: 12.5px; margin-bottom: 8px; }
+  .grid:not(.grid-row) .pc-big { font-size: 22px; }
+  .grid:not(.grid-row) .pc-act { margin-top: 10px; }
+  .grid-row .pc-b, .swipe .pc-b { padding: 12px 12px 14px; }
+  .grid-row .pc-name, .swipe .pc-name { font-size: 14.5px; }
+  .grid-row .pc-specs, .swipe .pc-specs { display: none; }
+  .grid-row .pc-big, .swipe .pc-big { font-size: 22px; }
+  .grid-row .pc-act, .swipe .pc-act { font-size: 14.5px; padding: 0 10px; }
 }
 
 /* Carrousel (défilement manuel, sans mouvement automatique) */
@@ -390,5 +396,10 @@ a { color: var(--g7); }
 
 /* Remise en cours : pastille vert clair (couleur d'appel de la charte), prix d'origine barré */
 .promo-sticker { background: var(--lime); color: var(--g9); border-radius: 2px; box-shadow: none; font-weight: 800; }
-.pc-promo { left: auto; right: 10px; top: 10px; }
-.pc-tot .was { margin-right: 4px; font-size: 13px; }
+/* Étiquettes de la photo : remise et palette côte à côte, jamais superposées */
+.pc-tags { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; }
+.pc-tags .pc-flag, .pc-tags .promo-sticker { position: static; white-space: nowrap; font-size: 11px; line-height: 1.2; padding: 4px 7px; }
+/* Prix : prix payé en grand, puis prix d'origine barré et prix au m² */
+.pc-sub { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-size: 13.5px; color: var(--muted); }
+.pc-sub .was { margin: 0; font-size: 13.5px; }
+.pc-sub b { color: var(--ink); font-weight: 700; }

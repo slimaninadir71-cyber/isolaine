@@ -29,8 +29,12 @@ export function ProductCard({ p, priority = false, label }: { p: Card; priority?
   return (
     <article className="pc">
       <Link href={href} className="pc-img" tabIndex={-1} aria-hidden="true">
-        {promo && <PromoSticker className="pc-promo" />}
-        {p.cu === "palette" ? <span className="pc-flag pal">Palette</span> : p.pickup ? <span className="pc-flag">Retrait magasin</span> : null}
+        {(promo || p.cu === "palette" || p.pickup) && (
+          <span className="pc-tags">
+            {promo && <PromoSticker className="pc-promo" />}
+            {p.cu === "palette" ? <span className="pc-flag pal">Palette</span> : p.pickup ? <span className="pc-flag">Retrait magasin</span> : null}
+          </span>
+        )}
         {p.image
           ? <img src={p.image} alt="" loading={priority ? "eager" : "lazy"} decoding="async" width={p.w ? Math.min(480, p.w) : undefined} height={p.h && p.w ? Math.round(Math.min(480, p.w) * p.h / p.w) : undefined} />
           : <span className="pc-noimg"><IconBox size={30} /><small>Photo à venir</small></span>}
@@ -44,10 +48,14 @@ export function ProductCard({ p, priority = false, label }: { p: Card; priority?
         <div className="pc-price">
           {p.price == null ? (
             <><span className="pc-quote">Sur devis</span><span className="pc-tot">prix selon quantité</span></>
-          ) : p.ppm2 != null ? (
-            <><span className="pc-big">{eur(p.ppm2)}<small>/m²</small></span><span className="pc-tot"><WasPrice was={p.was} price={p.price} /> <b>{eur(p.price)}</b><br />{unitWord}</span></>
           ) : (
-            <><span className="pc-big">{from && <small className="from">dès </small>}{eur(p.price)}</span><span className="pc-tot"><WasPrice was={p.was} price={p.price} />{promo ? <br /> : null}{from ? "selon option" : unitWord}</span></>
+            <>
+              <span className="pc-big">{from && <small className="from">dès </small>}{eur(p.price)}</span>
+              <span className="pc-tot">{from ? "selon option" : unitWord}</span>
+              {(promo || p.ppm2 != null) && (
+                <span className="pc-sub"><WasPrice was={p.was} price={p.price} />{p.ppm2 != null && <span>soit <b>{eur(p.ppm2)}</b>/m²</span>}</span>
+              )}
+            </>
           )}
         </div>
         {canAdd ? (
