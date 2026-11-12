@@ -31,15 +31,15 @@ export function renderBody(content: string, vars: Record<string, string>) {
     if (!b) continue;
     const btn = b.match(/^\[\[\s*(.+?)\s*\|\s*(\S+)\s*\]\]$/);
     if (btn) {
-      html.push(`<p style="margin:22px 0"><a href="${safeUrl(btn[2])}" style="display:inline-block;padding:14px 22px;background:#f5b400;color:#1b1400;font-weight:bold;border-radius:8px;text-decoration:none">${esc(btn[1])}</a></p>`);
+      html.push(`<p style="margin:22px 0"><a href="${safeUrl(btn[2])}" style="display:inline-block;padding:14px 22px;background:#A8CD38;color:#173D32;font-weight:bold;border-radius:3px;text-decoration:none">${esc(btn[1])}</a></p>`);
       text.push(`${btn[1]} : ${safeUrl(btn[2])}`);
     } else if (b.startsWith("## ")) {
-      html.push(`<h2 style="margin:26px 0 8px;font-size:18px;color:#0f2233">${inline(b.slice(3))}</h2>`); text.push(plain(b.slice(3)).toUpperCase());
+      html.push(`<h2 style="margin:26px 0 8px;font-size:19px;color:#173D32">${inline(b.slice(3))}</h2>`); text.push(plain(b.slice(3)).toUpperCase());
     } else if (b.split("\n").every((l) => l.startsWith("- "))) {
       html.push(`<ul style="margin:0 0 14px;padding-left:20px">${b.split("\n").map((l) => `<li style="margin:0 0 6px">${inline(l.slice(2))}</li>`).join("")}</ul>`); text.push(b.split("\n").map(plain).join("\n"));
     } else if (b.startsWith("> ")) {
       const t = b.split("\n").map((l) => l.replace(/^> ?/, ""));
-      html.push(`<div style="margin:18px 0;padding:14px 16px;background:#f5f7f9;border-left:4px solid #f5b400;border-radius:6px">${t.map(inline).join("<br>")}</div>`); text.push(t.map(plain).join("\n"));
+      html.push(`<div style="margin:18px 0;padding:14px 16px;background:#F1F6E1;border-left:4px solid #A8CD38;border-radius:3px">${t.map(inline).join("<br>")}</div>`); text.push(t.map(plain).join("\n"));
     } else {
       html.push(`<p style="margin:0 0 14px">${b.split("\n").map(inline).join("<br>")}</p>`); text.push(b.split("\n").map(plain).join("\n"));
     }
@@ -47,13 +47,13 @@ export function renderBody(content: string, vars: Record<string, string>) {
   return { html: html.join(""), text: text.join("\n\n") };
 }
 
-/** Habillage commun aux e-mails ISO-LAINE. Les e-mails commerciaux portent toujours le lien de désinscription. */
+/** Habillage commun aux e-mails ISO-LAINE (palette du site : vert foncé #173D32, vert clair #A8CD38, fond lin #F7F7F2). Les e-mails commerciaux portent toujours le lien de désinscription. */
 export function layout(subject: string, body: { html: string; text: string }, opts: { commercial: boolean; unsubscribe: string; why?: string }) {
   const why = opts.why ? opts.why : opts.commercial
     ? `Vous recevez cet e-mail car vous avez accepté de recevoir les conseils et offres d'ISO-LAINE.`
     : `Vous recevez cet e-mail car vous avez demandé le guide ISO-LAINE sur ${SITE.domain}. Il ne s'agit pas d'une inscription à la newsletter.`;
   const legal = `${COMPANY.legalName}, ${COMPANY.address} – SIREN ${COMPANY.siren}`;
-  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head><body style="margin:0;padding:0;background:#f5f7f9"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7f9"><tr><td align="center" style="padding:20px 10px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1b2833"><tr><td style="background:#0f2233;padding:18px 26px;border-bottom:4px solid #f5b400"><a href="${SITE.url}" style="color:#ffffff;text-decoration:none;font-size:22px;font-weight:bold;letter-spacing:.5px">ISO<span style="color:#f5b400">-</span>LAINE</a><div style="color:#c4d0db;font-size:12px;margin-top:2px">Laine de verre et isolants, livraison offerte</div></td></tr><tr><td style="padding:26px">${body.html}<p style="margin:22px 0 0">L'équipe ISO-LAINE<br><span style="color:#5d6b7a;font-size:14px">Une question ? Répondez à cet e-mail ou écrivez-nous sur WhatsApp au ${esc(CONTACT.whatsappDisplay)}.</span></p></td></tr><tr><td style="background:#f5f7f9;padding:16px 26px;color:#5d6b7a;font-size:12px;line-height:1.5">${esc(why)}<br>${opts.commercial ? `<a href="${opts.unsubscribe}" style="color:#5d6b7a">Se désinscrire en un clic</a> · ` : ""}<a href="${SITE.url}/confidentialite" style="color:#5d6b7a">Données personnelles</a><br>${esc(legal)}</td></tr></table></td></tr></table></body></html>`;
+  const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head><body style="margin:0;padding:0;background:#F7F7F2"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F7F2"><tr><td align="center" style="padding:20px 10px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #D5DAD4;border-radius:4px;overflow:hidden;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#202923"><tr><td style="background:#173D32;padding:18px 26px;border-bottom:4px solid #A8CD38"><a href="${SITE.url}" style="color:#ffffff;text-decoration:none;font-family:Archivo,Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;letter-spacing:-.2px">Iso<span style="color:#A8CD38">laine</span></a><div style="color:#AFC0B7;font-size:12px;margin-top:2px;letter-spacing:.3px">Isolants et matériel de pose · −20 % sur tout le catalogue · livraison offerte</div></td></tr><tr><td style="padding:26px">${body.html}<p style="margin:22px 0 0">L'équipe ISO-LAINE<br><span style="color:#5B665F;font-size:14px">Une question ? Répondez à cet e-mail ou écrivez-nous sur WhatsApp au ${esc(CONTACT.whatsappDisplay)}.</span></p></td></tr><tr><td style="background:#173D32;padding:16px 26px;color:#AFC0B7;font-size:12px;line-height:1.5">${esc(why)}<br>${opts.commercial ? `<a href="${opts.unsubscribe}" style="color:#C9D6CF">Se désinscrire en un clic</a> · ` : ""}<a href="${SITE.url}/confidentialite" style="color:#C9D6CF">Données personnelles</a><br>${esc(legal)}</td></tr></table></td></tr></table></body></html>`;
   const text = `${body.text}\n\nL'équipe ISO-LAINE\nUne question ? Répondez à cet e-mail ou écrivez-nous sur WhatsApp au ${CONTACT.whatsappDisplay}.\n\n--\n${why}\n${opts.commercial ? `Se désinscrire : ${opts.unsubscribe}\n` : ""}Données personnelles : ${SITE.url}/confidentialite\n${legal}\n`;
   return { html, text };
 }
