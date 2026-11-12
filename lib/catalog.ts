@@ -1,10 +1,11 @@
 import data from "./data/catalog.json";
 import detailsData from "./data/details.json";
 import type { Card, Detail, Family, NavFamily } from "./types";
+import { demandScore } from "./score";
 
-// Catalogue préparé au build depuis Supabase (voir scripts/fetch-catalog.mjs). Prix normaux, sans promotion.
+// Catalogue préparé au build depuis Supabase (voir scripts/fetch-catalog.mjs). Prix remisés de 20 % (« was » = prix d'origine).
 export const families = (data as { families: Family[] }).families;
-export const products = (data as { products: Card[] }).products;
+export const products = (data as { products: Card[] }).products.map((p): Card => ({ ...p, score: demandScore(p) }));
 const details = detailsData as unknown as Record<string, Detail>;
 
 const bySlug = new Map(products.map((p) => [p.slug, p]));

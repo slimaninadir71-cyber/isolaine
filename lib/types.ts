@@ -15,6 +15,8 @@ export type Card = {
   price: number | null;
   /** Prix avant remise de −20 % */
   was?: number | null;
+  /** Score « chances de vente » (lib/score.ts), calculé au chargement du catalogue */
+  score?: number;
   priceMax: number | null;
   variable: boolean;
   nvar: number;
@@ -53,3 +55,6 @@ export type Detail = {
   cover?: Cover;
 };
 export type Cover = { m2: number; unit: string; inner: { n: number; m2: number; kind: string } | null };
+
+/** Rayon tel qu'affiché dans le menu et le pied de page */
+export type NavRayon = { key: string; slug: string; title: string; short: string; total: number; links: { href: string; name: string; count: number }[] };

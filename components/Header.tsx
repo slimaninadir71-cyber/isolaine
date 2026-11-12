@@ -1,26 +1,28 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart";
-import type { NavFamily } from "@/lib/types";
+import type { NavFamily, NavRayon } from "@/lib/types";
 import { SITE } from "@/lib/site";
 import { LV_USES } from "@/lib/lv-labels";
 import { Logo } from "./Logo";
 import { SearchBox } from "./SearchBox";
-import { IconCart, IconChevron, IconChevronDown, IconClose, IconMenu, IconQuote, IconSearch, IconTruck } from "./Icons";
+import { IconCart, IconChat, IconCheck, IconChevron, IconChevronDown, IconClock, IconClose, IconMenu, IconQuote, IconSearch, IconTruck } from "./Icons";
 
-export default function Header({ families }: { families: NavFamily[] }) {
+/**
+ * En-tête : bandeau d'engagements réels, logo, recherche, contact / devis / panier,
+ * puis le menu des 5 rayons avec leurs sous-catégories (survol ou clavier). Téléphone : recherche + bande des rayons + menu latéral.
+ */
+export default function Header({ rayons }: { families: NavFamily[]; rayons: NavRayon[] }) {
   const { count, ready } = useCart();
   const pathname = usePathname();
-  const [mega, setMega] = useState(false);
   const [drawer, setDrawer] = useState(false);
-  const [openFam, setOpenFam] = useState<string | null>(null);
-  const hover = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [openR, setOpenR] = useState<string | null>(null);
 
-  useEffect(() => { setMega(false); setDrawer(false); }, [pathname]);
+  useEffect(() => { setDrawer(false); (document.activeElement as HTMLElement | null)?.blur?.(); }, [pathname]);
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setMega(false); setDrawer(false); } };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setDrawer(false); (document.activeElement as HTMLElement | null)?.blur?.(); } };
     document.addEventListener("keydown", esc);
     return () => document.removeEventListener("keydown", esc);
   }, []);
@@ -29,22 +31,28 @@ export default function Header({ families }: { families: NavFamily[] }) {
     return () => { document.body.style.overflow = ""; };
   }, [drawer]);
 
-  const enter = () => { if (hover.current) clearTimeout(hover.current); hover.current = setTimeout(() => setMega(true), 120); };
-  const leave = () => { if (hover.current) clearTimeout(hover.current); hover.current = setTimeout(() => setMega(false), 180); };
   const n = ready ? count : 0;
-  // Bouton loupe (téléphone) : remonte à la recherche et place le curseur dedans
+  const cur = rayons.find((r) => pathname === `/${r.slug}`)?.key;
   const findSearch = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(() => document.querySelector<HTMLInputElement>(".hdr-msearch input")?.focus(), 250);
   };
 
+
   return (
     <>
       <a href="#contenu" className="skip">Aller au contenu</a>
-      <div className="topbar">
-        <div className="wrap topbar-in">
-          <span><IconTruck size={16} /> <span className="tb-long">{SITE.delivery} · {SITE.ship}</span><span className="tb-short">Livraison offerte · {SITE.ship}</span></span>
-          <Link href="/contact?type=devis" className="topbar-link">Chantier, palette, grande quantité : demandez un devis</Link>
+      <div className="util">
+        <div className="wrap util-in">
+          <ul>
+            <li><IconTruck size={16} /> {SITE.delivery}</li>
+            <li><IconClock size={16} /> {SITE.ship}</li>
+            <li><IconCheck size={16} /> Paiement sécurisé par carte, 3-D Secure</li>
+          </ul>
+          <ul>
+            <li><Link href="/contact">Aide et contact</Link></li>
+            <li><Link href="/contact?type=devis">Devis professionnels</Link></li>
+          </ul>
         </div>
       </div>
       <header className="hdr">
@@ -52,69 +60,69 @@ export default function Header({ families }: { families: NavFamily[] }) {
           <button type="button" className="hdr-burger" aria-label="Ouvrir le menu" aria-expanded={drawer} aria-controls="menu-mobile" onClick={() => setDrawer(true)}>
             <IconMenu size={24} />
           </button>
-          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil"><Logo /></Link>
+          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil"><Logo light /></Link>
           <div className="hdr-search"><SearchBox /></div>
           <nav className="hdr-actions" aria-label="Accès rapides">
             <button type="button" className="hdr-act hdr-sbtn" aria-label="Rechercher un produit" onClick={findSearch}><IconSearch size={22} /></button>
-            <Link href="/contact?type=devis" className="hdr-act"><IconQuote size={20} /><span>Devis</span></Link>
+            <Link href="/contact" className="hdr-act hdr-quote"><IconChat size={22} /><span>Contact</span></Link>
+            <Link href="/contact?type=devis" className="hdr-act hdr-quote"><IconQuote size={22} /><span>Devis</span></Link>
             <Link href="/panier" className="hdr-act hdr-cart" aria-label={`Panier : ${n} article${n > 1 ? "s" : ""}`}>
               <IconCart size={22} /><span>Panier</span>{n > 0 && <b className="badge" aria-hidden="true">{n > 99 ? "99+" : n}</b>}
             </Link>
           </nav>
         </div>
-        <nav className="hdr-nav" aria-label="Familles de produits" onMouseLeave={leave}>
-          <div className="wrap hdr-nav-in">
-            <button type="button" className={`mega-btn${mega ? " on" : ""}`} aria-expanded={mega} aria-controls="mega"
-              onClick={() => setMega((m) => !m)} onMouseEnter={enter}>
-              <IconMenu size={18} /> Tous nos produits <IconChevronDown size={16} />
-            </button>
-            <Link href="/laine-de-verre" className={`hdr-nav-link hdr-nav-lv${pathname === "/laine-de-verre" ? " on" : ""}`}>Laine de verre</Link>
-            {LV_USES.map((u) => (
-              <Link key={u.key} href={`/laine-de-verre/${u.slug}`} className={`hdr-nav-link${pathname === `/laine-de-verre/${u.slug}` ? " on" : ""}`}>{u.nav}</Link>
-            ))}
-            <Link href="/laine-de-verre/materiel-de-pose" className={`hdr-nav-link${pathname === "/laine-de-verre/materiel-de-pose" ? " on" : ""}`}>Matériel de pose</Link>
-            <Link href="/categorie/isolants" className={`hdr-nav-link${pathname?.startsWith("/categorie/isolants") ? " on" : ""}`}>Autres isolants</Link>
-            <Link href="/livraison-retours" className="hdr-nav-link hdr-nav-end">Livraison offerte</Link>
-          </div>
-          {mega && (
-            <div id="mega" className="mega" onMouseEnter={enter}>
-              <div className="wrap mega-grid">
-                <div className="mega-col mega-lv">
-                  <Link href="/laine-de-verre" className="mega-title">Laine de verre</Link>
-                  <ul>
-                    {LV_USES.map((u) => <li key={u.key}><Link href={`/laine-de-verre/${u.slug}`}>{u.title}</Link></li>)}
-                    <li><Link href="/laine-de-verre/materiel-de-pose">Matériel de pose</Link></li>
-                  </ul>
-                </div>
-                {families.map((f) => (
-                  <div key={f.slug} className="mega-col">
-                    <Link href={`/categorie/${f.slug}`} className="mega-title">{f.name} <small>{f.count}</small></Link>
-                    <ul>
-                      {f.subs.slice(0, 6).map((s) => (
-                        <li key={s.slug}><Link href={`/categorie/${f.slug}/${s.slug}`}>{s.name}</Link></li>
-                      ))}
-                      {f.subs.length > 6 && <li><Link href={`/categorie/${f.slug}`} className="mega-more">Tout voir ({f.subs.length} sous-familles)</Link></li>}
-                    </ul>
+      </header>
+
+      <nav className="rnav" aria-label="Rayons">
+        <div className="wrap rnav-in">
+          <div className="rnav-i"><Link href="/" className={pathname === "/" ? "on" : undefined}>Accueil</Link></div>
+          {rayons.map((r) => (
+            <div key={r.key} className={`rnav-i${r.key === "autres" ? " end" : ""}`}>
+              <Link href={`/${r.slug}`} className={cur === r.key ? "on" : undefined} aria-haspopup="true">{r.title} <IconChevronDown size={14} /></Link>
+              <div className="rmega">
+                <div className="wrap rmega-in">
+                  {r.key === "isolation" ? (
+                    <>
+                      <div><h4>Par matériau</h4><ul>{r.links.slice(0, 6).map((l) => <li key={l.href}><Link href={l.href}>{l.name} <small>{l.count}</small></Link></li>)}</ul></div>
+                      <div><h4>Par usage</h4><ul>
+                        {LV_USES.map((u) => <li key={u.key}><Link href={`/laine-de-verre/${u.slug}`}>{u.title}</Link></li>)}
+                        {r.links.slice(6).map((l) => <li key={l.href}><Link href={l.href}>{l.name} <small>{l.count}</small></Link></li>)}
+                      </ul></div>
+                      <div><h4>Par format</h4><ul>
+                        <li><Link href="/laine-de-verre?vente=unite">Rouleaux et sacs à l'unité</Link></li>
+                        <li><Link href="/laine-de-verre?vente=palette&tri=m2">Palettes complètes</Link></li>
+                        <li><Link href="/laine-de-verre">Toute la laine de verre</Link></li>
+                      </ul></div>
+                      <div><h4>Marques</h4><ul>
+                        {["Isover", "Ursa", "Austrotherm", "Knauf", "Styrodur"].map((b) => <li key={b}><Link href={`/isolation?marque=${b}`}>{b}</Link></li>)}
+                      </ul></div>
+                    </>
+                  ) : (
+                    [0, 1, 2, 3].map((c) => {
+                      const per = Math.ceil(r.links.length / 4);
+                      const part = r.links.slice(c * per, c * per + per);
+                      return part.length ? <div key={c}><h4>{c === 0 ? "Catégories" : " "}</h4><ul>{part.map((l) => <li key={l.href}><Link href={l.href}>{l.name} <small>{l.count}</small></Link></li>)}</ul></div> : <div key={c} />;
+                    })
+                  )}
+                  <div className="rmega-feat">
+                    <p><b>{r.title}</b><br />{r.total} produits, les plus demandés en premier.</p>
+                    <Link href={`/${r.slug}`}>Voir tout le rayon <IconChevron size={14} /></Link>
+                    {r.key === "isolation" && <Link href="/laine-de-verre?vente=palette&tri=m2">Palettes : prix au m² <IconChevron size={14} /></Link>}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          )}
-        </nav>
-      </header>
-      {/* Téléphone : recherche et raccourcis laine de verre, sous la barre fixe (ils défilent avec la page) */}
+          ))}
+        </div>
+      </nav>
+
+      {/* Téléphone : recherche et bande des rayons, sous la barre fixe */}
       <div className="hdr-sub">
-        <div className="wrap hdr-msearch"><SearchBox /></div>
-        <nav className="qnav" aria-label="Laine de verre">
-          <div className="qnav-in">
-            <Link href="/laine-de-verre" className={`qpill qpill-lv${pathname === "/laine-de-verre" ? " on" : ""}`}>Laine de verre</Link>
-            {LV_USES.map((u) => (
-              <Link key={u.key} href={`/laine-de-verre/${u.slug}`} className={`qpill${pathname === `/laine-de-verre/${u.slug}` ? " on" : ""}`}>{u.nav}</Link>
-            ))}
-            <Link href="/laine-de-verre/materiel-de-pose" className={`qpill${pathname === "/laine-de-verre/materiel-de-pose" ? " on" : ""}`}>Matériel de pose</Link>
-          </div>
-        </nav>
+        <div className="hdr-msearch"><SearchBox /></div>
       </div>
+      <nav className="rstrip" aria-label="Rayons">
+        {rayons.map((r) => <Link key={r.key} href={`/${r.slug}`} className={cur === r.key ? "on" : undefined}>{r.title}</Link>)}
+      </nav>
 
       {drawer && (
         <div className="drawer-wrap">
@@ -124,41 +132,31 @@ export default function Header({ families }: { families: NavFamily[] }) {
               <Logo />
               <button type="button" className="icon-btn" aria-label="Fermer le menu" onClick={() => setDrawer(false)} autoFocus><IconClose size={24} /></button>
             </div>
-            <p className="drawer-h">Laine de verre</p>
-            <ul className="drawer-links drawer-lv">
-              <li><Link href="/laine-de-verre">Toute la laine de verre <IconChevron size={16} /></Link></li>
-              {LV_USES.map((u) => <li key={u.key}><Link href={`/laine-de-verre/${u.slug}`}>{u.title}</Link></li>)}
-              <li><Link href="/laine-de-verre/materiel-de-pose">Matériel de pose</Link></li>
-            </ul>
-            <p className="drawer-h">Informations</p>
+            <p className="drawer-h">Nos rayons</p>
+            {rayons.map((r) => (
+              <div key={r.key} className="drawer-rayon">
+                <div className="drawer-row">
+                  <Link href={`/${r.slug}`}>{r.title} <small>{r.total}</small></Link>
+                  <button type="button" className="icon-btn" aria-expanded={openR === r.key} aria-label={`Catégories ${r.title}`} onClick={() => setOpenR(openR === r.key ? null : r.key)}>
+                    <IconChevronDown size={20} className={openR === r.key ? "rot" : ""} />
+                  </button>
+                </div>
+                {openR === r.key && (
+                  <ul>
+                    {r.key === "isolation" && LV_USES.map((u) => <li key={u.key}><Link href={`/laine-de-verre/${u.slug}`}>{u.title}</Link></li>)}
+                    {r.links.map((l) => <li key={l.href}><Link href={l.href}>{l.name} <small>{l.count}</small></Link></li>)}
+                  </ul>
+                )}
+              </div>
+            ))}
+            <p className="drawer-h">Commander</p>
             <ul className="drawer-links">
               <li><Link href="/panier">Mon panier{n > 0 ? ` (${n})` : ""}</Link></li>
               <li><Link href="/contact?type=devis">Demander un devis</Link></li>
               <li><Link href="/livraison-retours">Livraison et retours</Link></li>
               <li><Link href="/contact">Contact</Link></li>
+              <li><Link href="/boutique">Tout le catalogue</Link></li>
             </ul>
-            <details className="drawer-more">
-              <summary>Autres produits <small>isolants, façade, outillage…</small> <IconChevronDown size={20} /></summary>
-              <ul className="drawer-list">
-                <li><div className="drawer-row"><Link href="/boutique">Tout le catalogue</Link></div></li>
-                {families.map((f) => (
-                  <li key={f.slug}>
-                    <div className="drawer-row">
-                      <Link href={`/categorie/${f.slug}`}>{f.name} <small>{f.count}</small></Link>
-                      <button type="button" className="icon-btn" aria-expanded={openFam === f.slug} aria-label={`Sous-familles ${f.name}`}
-                        onClick={() => setOpenFam(openFam === f.slug ? null : f.slug)}>
-                        <IconChevronDown size={20} className={openFam === f.slug ? "rot" : ""} />
-                      </button>
-                    </div>
-                    {openFam === f.slug && (
-                      <ul className="drawer-sub">
-                        {f.subs.map((s) => (<li key={s.slug}><Link href={`/categorie/${f.slug}/${s.slug}`}>{s.name} <small>{s.count}</small></Link></li>))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
           </div>
         </div>
       )}

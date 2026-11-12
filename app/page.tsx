@@ -1,17 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { families, getFamily, productsOf } from "@/lib/catalog";
-import { USES, kitAll, lv, lvOf, lvSorted, minPpm2, minPrice } from "@/lib/laine";
-import { eur } from "@/lib/format";
-import { SITE } from "@/lib/site";
+import { getProduct } from "@/lib/catalog";
+import { USES, lv, lvOf, minPpm2 } from "@/lib/laine";
+import { RAYONS, rayonLinks, rayonPicks, rayonProducts } from "@/lib/rayons";
+import { eur, num } from "@/lib/format";
+import { COMPANY, SITE } from "@/lib/site";
+import type { Card } from "@/lib/types";
 import heroData from "@/lib/data/hero.json";
-import { ProductCard } from "@/components/ProductCard";
-import { ProductCarousel, type Slide } from "@/components/ProductCarousel";
-import { Reveal } from "@/components/Reveal";
 import { JsonLd } from "@/components/Breadcrumbs";
+import { Shelf, ShelfArrows } from "@/components/Shelf";
 import { SurfaceCalc } from "@/components/SurfaceCalc";
-import { PromoSticker } from "@/components/Promo";
-import { IconChevron, IconQuote, IconRuler, IconTruck, IconLayers, IconRoof, IconWall, IconWind } from "@/components/Icons";
+import { PROMO_PCT } from "@/components/Promo";
+import { IconChevron } from "@/components/Icons";
 
 type Hero = { w: number; h: number; h800?: number; src: string; avif: string; webp: string; og: string };
 const hero = heroData as unknown as Hero | null;
@@ -21,38 +21,22 @@ export const metadata: Metadata = {
   ...(hero?.og ? { openGraph: { images: [{ url: hero.og, width: 1200, height: 630, alt: "Rouleau de laine de verre dans des combles en cours d'isolation" }] } } : {}),
 };
 
+// « Complétez votre chantier » : isoler → fixer → poser (références du catalogue)
+const STEPS: { n: string; t: string; d: string; href: string; more: string; slugs: string[] }[] = [
+  { n: "1", t: "Isoler", d: "Rouleaux, panneaux ou laine à souffler.", href: "/isolation", more: "Tout l'isolant",
+    slugs: ["laine-de-verre-120mm-isover-gr-32-kraft-roule-324m2-r375", "laine-de-verre-280mm-isover-comble-ecolaine-336m2-r7", "comblissimo-isover"] },
+  { n: "2", t: "Fixer", d: "L'ossature du doublage et ses fixations.", href: "/fixation-ossature", more: "Fixation & ossature",
+    slugs: ["rail-pour-lisolation-interieure-iti-48mm-3ml", "montant-pour-lisolation-interieure-iti-48mm-3ml", "fourrure-pour-isolation-interieure-iti-45mm-3ml"] },
+  { n: "3", t: "Poser", d: "Étanchéité, découpe et finitions.", href: "/materiel-de-pose", more: "Matériel de pose",
+    slugs: ["pare-vapeur-pare-pluie-master-classic", "couteau-pour-laine-de-verre-28cm", "mousse-expansive-izo-mousse-pu-750-ml"] },
+];
+const short = (n: string) => n.replace(/\s+–\s+vendue? à la palette/i, "");
+
 export default function Home() {
-  const priced = lvSorted(lv.filter((p) => p.price != null && p.image && !/r[ée]glette/i.test(p.name)));
-  const gra = productsOf("isolants", "polystyrene-graphite");
-  const graPick = gra.filter((p) => p.image && p.price != null).sort((a, b) => (a.thickness ?? 0) - (b.thickness ?? 0));
-  const toSlide = (p: (typeof priced)[number]): Slide => ({ slug: p.slug, name: p.name, brand: p.brand, image: p.image, price: p.price, was: p.was, priceMax: p.priceMax, variable: p.variable, ppm2: p.ppm2, thickness: p.thickness, r: p.r, facing: p.facing, cu: p.cu });
-  const byPrice = (a: { price: number | null }, b: { price: number | null }) => (a.price ?? 0) - (b.price ?? 0);
-  // Petits budgets : laine de verre vendue à l'unité (rouleaux, sacs), le prix le plus bas de chaque usage + un rouleau fin de 100 à 120 mm
-  const unit = priced.filter((p) => p.sale?.split("+").includes("unite")).sort(byPrice);
-  const cheapUse = (u: string) => unit.find((p) => p.use === u);
-  const thin = unit.find((p) => p.use === "combles" && (p.thickness ?? 999) <= 120);
-  const blow = cheapUse("souffler");
-  const budget = [cheapUse("combles"), thin, cheapUse("murs")].filter((p): p is (typeof priced)[number] => !!p);
-  const budgetUniq = [...new Map(budget.map((p) => [p.slug, p])).values()].sort(byPrice).map(toSlide);
-  if (blow) budgetUniq.splice(Math.min(3, budgetUniq.length), 0, toSlide(blow)); // la laine à souffler en 4e position
-  // Polystyrène graphité : les paquets au prix affiché le plus bas (une épaisseur chacun)
-  const graFixed = graPick.filter((p) => !p.variable).sort(byPrice);
-  const graSlides: Slide[] = [...new Map(graFixed.map((p) => [p.thickness, p])).values()].slice(0, 2).map(toSlide);
-  // Produits phares : palettes de laine de verre 200 et 300 mm pour les combles (la moins chère de chaque épaisseur)
-  const flag = [200, 300].map((t) => priced.filter((p) => p.use === "combles" && p.thickness === t && p.sale?.split("+").includes("palette")).sort(byPrice)[0]).filter((p): p is (typeof priced)[number] => !!p).map(toSlide);
-  const selSlides: Slide[] = [...budgetUniq, ...graSlides, ...flag];
-  const graImg = graPick[0]?.image ?? gra.find((p) => p.image)?.image;
-  const graFrom = gra.map((p) => p.price).filter((x): x is number => x != null);
-  const kitIte = getFamily("isolants")?.subs.find((s) => s.slug === "kits-isolation-par-l-exterieur");
-  const rates = [...USES.map((u) => ({ key: u.key, label: u.title, href: `/laine-de-verre/${u.slug}`, ppm2: minPpm2(lvOf(u.key)) }))];
-  const kit = kitAll().filter((p) => p.image && p.price != null).slice(0, 4);
-  const m2 = minPpm2(lv);
-  const roll = minPrice(lv.filter((p) => p.cu === "rouleau"));
-  const brands = [...new Set(lv.map((p) => p.brand).filter(Boolean))];
-  const isolants = getFamily("isolants");
-  const otherIso = isolants?.subs.filter((s) => s.slug !== "laine-de-verre") ?? [];
-  const others = families.filter((f) => f.slug !== "isolants");
-  const total = families.reduce((n, f) => n + f.count, 0);
+  const pal = minPpm2(lv.filter((p) => p.cu === "palette"));
+  const roll = minPpm2(lv.filter((p) => p.cu === "rouleau"));
+  const rates = USES.map((u) => ({ key: u.key, label: u.title, href: `/laine-de-verre/${u.slug}`, ppm2: minPpm2(lvOf(u.key)) }));
+  const steps = STEPS.map((s) => ({ ...s, items: s.slugs.map(getProduct).filter((p): p is Card => !!p && p.price != null) }));
 
   return (
     <>
@@ -61,161 +45,172 @@ export default function Home() {
         "@graph": [
           { "@type": "Organization", "@id": `${SITE.url}/#org`, name: SITE.name, url: SITE.url },
           { "@type": "WebSite", "@id": `${SITE.url}/#site`, url: SITE.url, name: SITE.name, inLanguage: "fr-FR", publisher: { "@id": `${SITE.url}/#org` },
-            potentialAction: { "@type": "SearchAction", target: `${SITE.url}/recherche?q={search_term_string}`, "query-input": "required name=search_term_string" } },
+            potentialAction: { "@type": "SearchAction", target: `${SITE.url}/recherche?q={search_term_string}`, "query-input": "required name=search_term_string" } }
         ],
       }} />
-      <Reveal />
 
-      <section className={`hero2${hero ? "" : " hero2-plain"}`}>
-        {hero && (
-          <div className="hero2-media">
-            <picture>
-              {hero.avif && <source type="image/avif" srcSet={hero.avif} sizes="100vw" />}
-              {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="100vw" />}
-              <img src={hero.src} alt="Rouleau de laine de verre déroulé dans des combles en cours d'isolation" width={hero.w} height={hero.h}
-                fetchPriority="high" decoding="async" />
+      {/* Bannière */}
+      <section className="v-hero">
+        <div className="v-hero-in">
+          {hero && (
+            <picture className="v-hero-img">
+              {hero.avif && <source type="image/avif" srcSet={hero.avif} sizes="(min-width: 761px) 58vw, 100vw" />}
+              {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="(min-width: 761px) 58vw, 100vw" />}
+              <img src={hero.src} alt="Rouleau de laine de verre déroulé dans des combles en cours d'isolation" width={hero.w} height={hero.h} fetchPriority="high" decoding="async" />
             </picture>
-            <div className="hero2-badges">
-              {m2 != null && <span className="chip-price"><small>Dès</small><b>{eur(m2)}</b><small>le m²</small></span>}
-              {roll != null && <span className="chip-price chip-alt"><small>Rouleau dès</small><b>{eur(roll)}</b></span>}
+          )}
+          <div className="v-hero-txt">
+            <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
+            <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
+            <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
+            <div className="v-hero-cta">
+              <Link href="/isolation" className="btn btn-primary">Découvrir nos isolants <IconChevron size={18} /></Link>
+              <Link href="/contact?type=devis" className="btn btn-line">Demander un devis chantier</Link>
             </div>
-          </div>
-        )}
-        <div className="wrap hero2-body">
-          <div className="hero2-txt">
-            <p className="eyebrow">Laine de verre {brands.join(" · ")} <span className="promo-pill">−20 % sur tout le catalogue</span></p>
-            <h1>L'isolation performante, au bon prix.</h1>
-            <p className="hero2-lead">
-              Découvrez notre sélection de matériaux isolants pour vos combles, murs et façades. Des solutions adaptées aux particuliers et aux professionnels.
-            </p>
-            <div className="cta-row">
-              <Link href="/laine-de-verre" className="btn btn-primary btn-lg">Découvrir la laine de verre <IconChevron size={18} /></Link>
-              <Link href="/contact?type=devis" className="btn btn-ghost btn-lg"><IconQuote size={18} /> <span className="lg-only">Demander un devis chantier</span><span className="sm-only">Devis chantier</span></Link>
-            </div>
-            <div className="hero2-chips">
-              {m2 != null && <span className="chip-price"><small>Dès</small><b>{eur(m2)}</b><small>le m²</small></span>}
-              {roll != null && <span className="chip-price chip-alt"><small>Rouleau à l'unité dès</small><b>{eur(roll)}</b></span>}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section wrap" aria-labelledby="cats" data-reveal>
-        <div className="section-head">
-          <div>
-            <h2 id="cats">Nos solutions d'isolation</h2>
-            <p className="section-sub">Choisissez votre famille de produits : prix affichés, livraison offerte.</p>
-          </div>
-        </div>
-        <div className="hcats">
-          <Link href="/laine-de-verre" className="hcat hcat-big hcat-lv">
-            <span className="hcat-img">{lv.find((p) => p.image) && <img src={(lv.find((p) => p.image) as { image: string }).image} alt="" loading="lazy" decoding="async" />}<PromoSticker /></span>
-            <span className="hcat-body">
-              <span className="hcat-tag">Produit phare</span>
-              <b className="hcat-title">Laine de verre</b>
-              <span className="hcat-lead">Rouleaux, panneaux et sacs Isover et Ursa, de nombreuses épaisseurs, à l'unité ou à la palette.</span>
-              <span className="hcat-foot">{m2 != null ? <>dès <b>{eur(m2)}</b>/m²</> : null}<span className="hcat-go">{lv.length} produits <IconChevron size={14} /></span></span>
-            </span>
-          </Link>
-          <Link href="/categorie/isolants/polystyrene-graphite" className="hcat hcat-big hcat-pg">
-            <span className="hcat-img">{graImg ? <img src={graImg} alt="" loading="lazy" decoding="async" /> : null}<PromoSticker /></span>
-            <span className="hcat-body">
-              <span className="hcat-tag">Isolation par l'extérieur</span>
-              <b className="hcat-title">Polystyrène graphité</b>
-              <span className="hcat-lead">Panneaux pour l'isolation thermique par l'extérieur (ITE), en plusieurs épaisseurs, pour particuliers et professionnels.</span>
-              <span className="hcat-foot">{graFrom.length ? <>dès <b>{eur(Math.min(...graFrom))}</b> le paquet</> : null}<span className="hcat-go">{gra.length} produits <IconChevron size={14} /></span></span>
-            </span>
-          </Link>
-          {USES.map((u) => {
-            const items = lvOf(u.key);
-            const Icon = u.key === "combles" ? IconRoof : u.key === "murs" ? IconWall : IconWind;
-            const mm = minPpm2(items);
-            return (
-              <Link key={u.key} href={`/laine-de-verre/${u.slug}`} className="hcat hcat-small">
-                <span className="pi"><Icon size={22} /></span>
-                <span className="hcat-body">
-                  <b className="hcat-title">{u.key === "combles" ? "Isolation des combles" : u.key === "murs" ? "Isolation des murs" : "Laine à souffler"}</b>
-                  <span className="hcat-lead">{u.lead}</span>
-                  <span className="hcat-foot">{mm != null ? <>dès <b>{eur(mm)}</b>/m²</> : <span />}<span className="hcat-go">{items.length} produits <IconChevron size={14} /></span></span>
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-        {kitIte && <p className="hcats-more">Kits d'isolation par l'extérieur : <Link href="/categorie/isolants/kits-isolation-par-l-exterieur">{kitIte.count} solutions complètes</Link></p>}
-      </section>
-
-
-      {selSlides.length > 3 && (
-        <section className="section section-soft cs-section" aria-labelledby="selection">
-          <div className="wrap">
-            <div className="section-head">
-              <div>
-                <h2 id="selection">Nos sélections en isolation</h2>
-                <p className="section-sub">Des petits prix aux palettes : rouleaux et sacs dès quelques dizaines d'euros, polystyrène graphité, et nos palettes de laine de verre 200 et 300 mm.</p>
+            {(pal != null || roll != null) && (
+              <div className="v-hero-from num">
+                {pal != null && <div><b>{eur(pal)}/m²</b>laine de verre à la palette</div>}
+                {roll != null && <div><b>{eur(roll)}/m²</b>rouleau à l'unité</div>}
               </div>
-              <Link href="/laine-de-verre?vente=unite&tri=prix-asc" className="link-arrow">Voir tous les petits prix <IconChevron size={16} /></Link>
-            </div>
+            )}
           </div>
-          <ProductCarousel items={selSlides} label="Sélection de produits d'isolation" />
-        </section>
-      )}
+        </div>
+      </section>
 
-      <section className="section wrap" aria-labelledby="calc" data-reveal>
+      {/* Avantages */}
+      <section className="adv" aria-label="Nos engagements">
+        <div className="wrap"><ul>
+          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11zM13.5 9.5h4.5l3.5 3.5v3h-8" /><circle cx="6.5" cy="17.5" r="1.8" /><circle cx="17.5" cy="17.5" r="1.8" /></svg>
+            <div><b>Livraison offerte</b><p>France métropolitaine et Belgique. {SITE.ship}.</p></div></li>
+          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M4 9.5h16M9.5 4v16" /></svg>
+            <div><b>Prix au m² affiché</b><p>Sur chaque rouleau et chaque palette de laine, pour comparer d'un coup d'œil.</p></div></li>
+          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
+            <div><b>À l'unité ou à la palette</b><p>Un rouleau pour un petit chantier, une palette complète pour un grand.</p></div></li>
+          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="8.5" cy="8" r="3" /><circle cx="16.5" cy="9" r="2.5" /><path d="M3 19c.8-3.4 3-5 5.5-5s4.7 1.6 5.5 5M14 14.5c2.6-.6 5.4.6 6.5 4.5" /></svg>
+            <div><b>Paiement sécurisé</b><p>Par carte bancaire, avec authentification 3-D Secure.</p></div></li>
+        </ul></div>
+      </section>
+
+      {/* Rayons en carrousels */}
+      <section className="ray-intro" aria-labelledby="rayons-h">
+        <div className="wrap">
+          <p className="eyebrow-v">Nos rayons</p>
+          <h2 id="rayons-h">Nos produits phares, rayon par rayon</h2>
+          <p className="lead">Dans chaque rayon, les références les plus demandées de chaque catégorie, en premier celles qui se vendent le mieux.</p>
+          <nav className="ray-jump" aria-label="Aller au rayon">
+            {RAYONS.map((r) => <a key={r.key} href={`#r${r.n}`}><span>{r.n}</span>{r.title}</a>)}
+          </nav>
+        </div>
+      </section>
+      {RAYONS.map((r) => {
+        const picks = rayonPicks(r);
+        const labels = Object.fromEntries(picks.map((p) => [p.slug, r.picks.find((g) => g.subs.includes(p.sub))?.label ?? p.subName]));
+        const total = rayonProducts(r).length;
+        return (
+          <section key={r.key} className="ray" id={`r${r.n}`} aria-labelledby={`r${r.n}-h`}>
+            <div className="wrap">
+              <div className="ray-h">
+                <div className="ray-t">
+                  <span className="ray-n">{r.n}</span>
+                  <div>
+                    <h2 id={`r${r.n}-h`}><Link href={`/${r.slug}`}>{r.title}</Link></h2>
+                    <p>{r.desc}</p>
+                    {r.key === "isolation" && r.brands && <p className="ray-brands">Marques : <b>{r.brands}</b></p>}
+                  </div>
+                </div>
+                <div className="ray-act">
+                  <Link href={`/${r.slug}`} className="more-link">Tout le rayon <span className="num">({total})</span></Link>
+                  <ShelfArrows target={`car-${r.key}`} />
+                </div>
+              </div>
+              <nav className="ray-subs" aria-label={`Catégories ${r.title}`}>
+                {rayonLinks(r).map((l) => <Link key={l.href} href={l.href}>{l.name}</Link>)}
+              </nav>
+              <Shelf id={`car-${r.key}`} items={picks} label={`Produits phares : ${r.title}`} labels={labels} />
+              <p className="ray-sort">Les plus demandés en premier{r.key === "outillage" ? " · machines et outils à partir de 20 €" : ""}</p>
+            </div>
+          </section>
+        );
+      })}
+
+      {/* Complétez votre chantier */}
+      <section className="chantier" aria-labelledby="chantier-h">
+        <div className="wrap">
+          <div className="sec-h">
+            <p className="eyebrow-v">Complétez votre chantier</p>
+            <h2 id="chantier-h">Isoler, fixer, poser : tout dans le même panier</h2>
+            <p>Pour un doublage de mur ou des combles, voici ce qui va avec l'isolant.</p>
+          </div>
+          <div className="steps3">
+            {steps.map((s) => (
+              <div key={s.n} className="step3">
+                <div className="step3-h">
+                  <span className="step3-n">{s.n}</span><h3>{s.t}</h3>
+                  {s.n !== "3" && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>}
+                </div>
+                <p>{s.d}</p>
+                {s.items.map((p) => {
+                  const from = p.variable && p.priceMax != null && p.priceMax > (p.price as number);
+                  return (
+                    <div key={p.slug} className="mini">
+                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" /> : <span />}
+                      <div>
+                        <Link href={`/produit/${p.slug}`}>{short(p.name)}</Link>
+                        <span>{p.ppm2 != null ? `${p.r ? `R = ${num(p.r)} · ` : ""}${eur(p.ppm2)}/m²` : p.pack || (from ? "Plusieurs options" : "À l'unité")}</span>
+                      </div>
+                      <div className="p num">{from ? "dès " : ""}{eur(p.price as number)}</div>
+                    </div>
+                  );
+                })}
+                <Link href={s.href} className="more-link">{s.more} →</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Calculateur de surface (existant) */}
+      <section className="wrap" style={{ paddingTop: 44 }} aria-label="Calculateur de surface">
         <SurfaceCalc rates={rates} />
       </section>
 
-      <div className="proofs2">
-        <div className="wrap proofs2-in proofs4">
-          <div><span className="pi"><IconTruck size={20} /></span><p><b>Livraison offerte</b><span>Expédié sous 24 h, France et Belgique</span></p></div>
-          <div><span className="pi"><IconRuler size={20} /></span><p><b>Prix au m² affiché</b><span>Transparent, sans surprise</span></p></div>
-          <div><span className="pi"><IconLayers size={20} /></span><p><b>À l'unité ou à la palette</b><span>Du petit au grand chantier</span></p></div>
-          <div><span className="pi"><IconQuote size={20} /></span><p><b>Particuliers et professionnels</b><span>Devis chantier sur demande</span></p></div>
-        </div>
+      {/* Outils et services */}
+      <div className="wrap">
+        <section className="tools-v" aria-labelledby="devis-h">
+          <div className="tools-l">
+            <p className="eyebrow-v">Chantier, palette, grande quantité</p>
+            <h2 id="devis-h">Un devis pour votre chantier</h2>
+            <p>Indiquez la surface, l'isolant et l'adresse de livraison : nous revenons vers vous par e-mail avec un chiffrage.</p>
+            <Link href="/contact?type=devis" className="btn btn-primary">Demander un devis</Link>
+            <ul><li>Particuliers et professionnels</li><li>Commande à la palette ou en plusieurs palettes</li><li>Réponse par e-mail</li></ul>
+          </div>
+          <div className="tools-r">
+            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5" /><path d="M8 7h8M8 11h2M12 11h1M15 11h1M8 14.5h2M12 14.5h1M15 14.5h1M8 18h2M12 18h4" /></svg>
+              <div><b>Calculateur de surface</b><p>Ci-dessus et sur chaque fiche d'isolant : indiquez vos m², il donne le nombre de rouleaux ou de palettes.</p><Link href="/laine-de-verre">Choisir un isolant →</Link></div></div>
+            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
+              <div><b>Achat à la palette</b><p>Toutes les palettes de laine de verre triées par prix au m².</p><Link href="/laine-de-verre?vente=palette&tri=m2">Voir les palettes →</Link></div></div>
+            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" /></svg>
+              <div><b>Accès rapide</b><p>Combles, murs, laine à souffler, rails, pare-vapeur : tous les rayons en un clic.</p><Link href="/boutique">Tout le catalogue →</Link></div></div>
+            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 5h16v11H8l-4 3.5z" /><path d="M8 9.5h8M8 12.5h5" /></svg>
+              <div><b>Contact commercial</b><p>Une question sur un produit, une livraison ou une commande en cours.</p><Link href="/contact">Nous écrire →</Link></div></div>
+          </div>
+        </section>
       </div>
 
-      <section className="section wrap seo-block" aria-labelledby="seo" data-reveal>
-        <h2 id="seo">Isolation thermique : laine de verre, polystyrène graphité et isolation extérieure</h2>
-        <div className="seo-cols">
-          <p>
-            Isolaine propose de la <Link href="/laine-de-verre">laine de verre Isover et Ursa</Link> pour l'<Link href="/laine-de-verre/combles">isolation des combles</Link>,
-            des <Link href="/laine-de-verre/murs">murs</Link> et des cloisons, en rouleaux, en panneaux ou en <Link href="/laine-de-verre/laine-a-souffler">laine à souffler</Link>.
-            Chaque fiche indique l'épaisseur, la résistance thermique R, le conditionnement et le prix au m².
-          </p>
+      {/* Réassurance */}
+      <section className="wrap" aria-labelledby="commande-h" id="comment-commander">
+        <div className="sec-h"><p className="eyebrow-v">Commander chez {SITE.name}</p><h2 id="commande-h">Comment ça se passe</h2></div>
+        <div className="reas">
+          <div><b>Livraison</b><p>{SITE.delivery}. Certains produits signalés sur leur fiche sont en retrait magasin uniquement.</p><Link href="/livraison-retours">Livraison et retours</Link></div>
+          <div><b>Paiement sécurisé</b><p>Par carte bancaire au moment de la commande, avec authentification 3-D Secure. Vos données de carte ne sont pas conservées.</p></div>
+          <div><b>Commande</b><p>Panier, coordonnées, paiement par carte, puis e-mail de confirmation. {SITE.ship}, {SITE.eta}.</p></div>
+          <div><b>Service client</b><p>Formulaire de contact ou WhatsApp, réponse rapide.</p><Link href="/contact">Contact</Link></div>
+          <div><b>Professionnels</b><p>Devis chantier et grandes quantités. Conditions propres aux professionnels dans les CGV.</p><Link href="/cgv">Conditions de vente</Link></div>
         </div>
+        <p className="company-line">{SITE.name} est l'enseigne en ligne de {COMPANY.legalName}, {COMPANY.form.split(" (")[0].toLowerCase()} immatriculée
+          au RCS de {COMPANY.rcs.replace(/^RCS /, "").replace(/ \d.*$/, "")} (SIREN {COMPANY.siren}), {COMPANY.address.replace(/, France$/, "")}. Rétractation de 14 jours pour les particuliers, garantie légale de conformité de 2 ans.</p>
       </section>
 
-      <section className="section wrap rayons" aria-labelledby="rayons" data-reveal>
-        <h2 id="rayons">Nos autres rayons</h2>
-        {otherIso.length > 0 && (
-          <div className="rayon">
-            <p className="rayon-h">Autres isolants</p>
-            <div className="near-list">
-              {otherIso.map((s) => <Link key={s.slug} href={`/categorie/isolants/${s.slug}`}>{s.name} <small>{s.count}</small></Link>)}
-            </div>
-          </div>
-        )}
-        <div className="rayon">
-          <p className="rayon-h">Façade, plâtrerie et chantier</p>
-          <div className="near-list">
-            {others.map((f) => <Link key={f.slug} href={`/categorie/${f.slug}`}>{f.name} <small>{f.count}</small></Link>)}
-          </div>
-        </div>
-        <Link href="/boutique" className="btn btn-ghost btn-block rayons-all">Voir tous nos produits ({total}) <IconChevron size={16} /></Link>
-      </section>
-
-      {kit.length > 0 && (
-        <section className="section wrap" aria-labelledby="pose" data-reveal>
-          <div className="section-head">
-            <div>
-              <h2 id="pose">Tout pour la pose</h2>
-              <p className="section-sub">Pare-vapeur, couteaux, accessoires de combles : à ajouter à la même commande.</p>
-            </div>
-            <Link href="/laine-de-verre/materiel-de-pose" className="link-arrow">Tout le matériel de pose <IconChevron size={16} /></Link>
-          </div>
-          <div className="grid grid-4 swipe">{kit.map((p) => <ProductCard key={p.slug} p={p} />)}</div>
-        </section>
-      )}
     </>
   );
 }
