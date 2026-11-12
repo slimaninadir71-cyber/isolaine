@@ -5,9 +5,9 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `refonte-sur-site-en-ligne` |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `habillage-mails-vert` (= `refonte-sur-site-en-ligne` + mails aux couleurs du site) |
 | Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
-| Base de données | Supabase `kquzvuhieiavbwtutpfi` (projet « isolaine ») |
+| Base de données | Supabase **`farcbnukknieppsxnzga`** (« isolaine-boutique », variable `NEXT_PUBLIC_SUPABASE_URL` sur Vercel). `kquzvuhieiavbwtutpfi` (projet Supabase encore nommé « isolaine ») est la base de **Destocklaine** : ne pas y toucher. |
 | Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
 | Activité | Isolants, ossature, matériel de pose, outillage ; livraison en France métropolitaine et Belgique |
 
@@ -18,6 +18,7 @@ Règles :
 - Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production).
 
 Versions en ligne :
+- 12 novembre 2026, 21 h 25 : déploiement `isolaine-og2icvbj6` (commit `91997c0`, branche `habillage-mails-vert`) — e-mails clients et e-mail équipe aux couleurs du site (vert foncé #173D32, vert clair #A8CD38, fond lin #F7F7F2). Habillage seulement, textes et paiement inchangés.
 - 12 novembre 2026 : déploiement `isolaine-38vqd7lws` (commit `222ffe5`) — refonte « vitrine » : 5 rayons (Isolation, Fixation & ossature, Matériel de pose, Outillage, Autres produits), carrousels, tri « Les plus demandés », palette vert foncé / vert clair ; remise −20 %, paiement CAWL, guide et BIENVENUE10 inchangés.
 - Retour en arrière possible vers `isolaine-rm7u1cbzd` (version du 12 novembre au matin, construite depuis les paquets Supabase).
 
