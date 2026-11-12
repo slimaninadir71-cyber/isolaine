@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Card } from "@/lib/types";
 import { eur, plural } from "@/lib/format";
 import { R_LABEL, SALE_LABEL, USE_LABEL, rBucket } from "@/lib/lv-labels";
+import { byDemand } from "@/lib/score";
 import { ProductCard } from "./ProductCard";
 import { IconClose, IconFilter } from "./Icons";
 
@@ -109,7 +110,7 @@ export default function Listing({ products, showFamily = false, showSub = true, 
     else if (sort === "prix-desc") out.sort((a, b) => priceOf(a, -1) - priceOf(b, -1));
     else if (sort === "m2") out.sort((a, b) => (a.ppm2 ?? Infinity) - (b.ppm2 ?? Infinity) || priceOf(a, 1) - priceOf(b, 1));
     else if (sort === "nom") out.sort((a, b) => a.name.localeCompare(b.name, "fr"));
-    else if (!relevance) out.sort((a, b) => a.position - b.position);
+    else if (!relevance) out.sort(byDemand); // « Les plus demandés »
     return out;
   }, [products, sel, sort, relevance]);
 
@@ -203,7 +204,7 @@ export default function Listing({ products, showFamily = false, showSub = true, 
             <label className="sort">
               <span>Trier</span>
               <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                <option value="pertinence">{orderLabel ?? (relevance ? "Pertinence" : "Recommandés")}</option>
+                <option value="pertinence">{orderLabel ?? (relevance ? "Pertinence" : "Les plus demandés")}</option>
                 <option value="prix-asc">Prix croissant</option>
                 <option value="prix-desc">Prix décroissant</option>
                 {facets.m2 && <option value="m2">Prix au m² croissant</option>}

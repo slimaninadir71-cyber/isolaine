@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { families, products } from "@/lib/catalog";
 import { SITE } from "@/lib/site";
 import { USES } from "@/lib/laine";
+import { RAYONS } from "@/lib/rayons";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -9,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ({ url: `${SITE.url}${path}`, lastModified: now, changeFrequency, priority });
   return [
     u("", 1, "daily"),
+    ...RAYONS.map((r) => u(`/${r.slug}`, 1, "daily")),
     u("/laine-de-verre", 1, "daily"),
     ...USES.map((x) => u(`/laine-de-verre/${x.slug}`, 0.9)),
     u("/laine-de-verre/materiel-de-pose", 0.8),

@@ -32,6 +32,8 @@ export type Card = {
   m2?: number;
   cu?: string;
   ppm2?: number;
+  /** Score « chances de vente » (lib/score.ts), calculé au chargement du catalogue */
+  score?: number;
 };
 
 export type SubFamily = { slug: string; name: string; count: number; image: string };
@@ -51,3 +53,5 @@ export type Detail = {
   cover?: Cover;
 };
 export type Cover = { m2: number; unit: string; inner: { n: number; m2: number; kind: string } | null };
+/** Rayon tel qu'affiché dans le menu et le pied de page */
+export type NavRayon = { key: string; slug: string; title: string; short: string; total: number; links: { href: string; name: string; count: number }[] };

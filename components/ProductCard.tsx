@@ -1,48 +1,62 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
-import { coverText, eur, num, priceText } from "@/lib/format";
+import { eur, num } from "@/lib/format";
 import type { Card } from "@/lib/types";
-import { IconBox, IconCart, IconStore } from "./Icons";
+import { IconBox } from "./Icons";
 
-/** Carte produit : photo, marque, nom, caractéristiques clés, prix exact (et prix au m² si connu) et action adaptée. */
-export function ProductCard({ p, priority = false }: { p: Card; priority?: boolean }) {
+/**
+ * Carte produit : photo, catégorie et marque, nom, caractéristiques (épaisseur, R, surface, conditionnement),
+ * prix mis en avant (prix au m² quand il est connu, sinon prix exact) et bouton d'achat.
+ * Aucune promotion : le catalogue n'en contient pas.
+ */
+export function ProductCard({ p, priority = false, label }: { p: Card; priority?: boolean; label?: string }) {
   const { add, notify } = useCart();
   const href = `/produit/${p.slug}`;
   const canAdd = p.price != null && !p.variable && p.buyId;
-  const specs = [p.thickness ? `${p.thickness} mm` : "", p.r ? `R ${num(p.r)}` : "", p.facing ?? ""].filter(Boolean);
+  const from = p.variable && p.priceMax != null && p.price != null && p.priceMax > p.price;
+  const specs: [string, string][] = [];
+  if (p.thickness) specs.push(["Épaisseur", `${p.thickness} mm`]);
+  if (p.r) specs.push(["Résistance", `R = ${num(p.r)}`]);
+  if (p.m2) specs.push(["Surface", `${num(p.m2)} m²`]);
+  if (p.pack && !/vendu/i.test(p.pack)) specs.push(["Conditionnement", p.pack]);
+  if (p.cu) specs.push(["Vendu par", p.cu === "palette" ? "Palette" : p.cu === "rouleau" ? "Rouleau" : p.cu]);
+  const unitWord = p.cu === "palette" ? "la palette" : p.cu === "rouleau" ? "le rouleau" : "l'unité";
+  const name = p.name.replace(/\s+–\s+vendue? à la palette/i, "");
+
   return (
-    <article className="pcard">
-      <Link href={href} className="pcard-img" tabIndex={-1} aria-hidden="true">
+    <article className="pc">
+      <Link href={href} className="pc-img" tabIndex={-1} aria-hidden="true">
+        {p.cu === "palette" ? <span className="pc-flag pal">Palette</span> : p.pickup ? <span className="pc-flag">Retrait magasin</span> : null}
         {p.image
           ? <img src={p.image} alt="" loading={priority ? "eager" : "lazy"} decoding="async" width={p.w ? Math.min(480, p.w) : undefined} height={p.h && p.w ? Math.round(Math.min(480, p.w) * p.h / p.w) : undefined} />
-          : <span className="pcard-noimg"><IconBox size={34} /><small>Photo non disponible</small></span>}
-        {p.pickup && <span className="pcard-flag"><IconStore size={14} /> Retrait magasin</span>}
-        {p.cu === "palette" && <span className="pcard-flag pcard-flag-pal">Palette</span>}
+          : <span className="pc-noimg"><IconBox size={30} /><small>Photo à venir</small></span>}
       </Link>
-      <div className="pcard-body">
-        <p className="pcard-meta">{p.brand || p.subName}</p>
-        <h3 className="pcard-name"><Link href={href}>{p.name}</Link></h3>
-        {specs.length > 0
-          ? <p className="pcard-specs">{specs.map((s) => <span key={s}>{s}</span>)}</p>
-          : <p className="pcard-ref">{p.sku ? <>Réf. {p.sku}</> : <span aria-hidden="true">&nbsp;</span>}</p>}
-        {p.m2 && p.cu ? <p className="pcard-pack">{coverText(p.cu, p.m2)}</p> : p.pack && <p className="pcard-pack">{p.pack}</p>}
-        <div className="pcard-foot">
-          <div className="pcard-prices">
-            <p className={`pcard-price${p.price == null ? " quote" : ""}`}>{priceText(p)}</p>
-            {p.ppm2 != null && <p className="pcard-ppm2">soit <b>{eur(p.ppm2)}/m²</b></p>}
-          </div>
-          {canAdd ? (
-            <button type="button" className="btn btn-sm btn-primary" aria-label={`Ajouter ${p.name} au panier`}
-              onClick={() => { add({ slug: p.slug, variantId: p.buyId, name: p.name, label: p.buyLabel, price: p.price as number, image: p.image, pickup: p.pickup }); notify("Ajouté au panier", { href: "/panier", label: "Voir le panier" }); }}>
-              <IconCart size={18} /><span>Ajouter</span>
-            </button>
-          ) : p.price == null ? (
-            <Link href={`/contact?type=devis&produit=${encodeURIComponent(p.slug)}`} className="btn btn-sm btn-ghost">Devis</Link>
+      <div className="pc-b">
+        <span className="pc-cat">{label ?? p.subName}{p.brand ? <> · <b>{p.brand}</b></> : null}</span>
+        <h3 className="pc-name"><Link href={href}>{name}</Link></h3>
+        {specs.length > 0 && (
+          <dl className="pc-specs">{specs.map(([k, v]) => <div key={k} style={{ display: "contents" }}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+        )}
+        <div className="pc-price">
+          {p.price == null ? (
+            <><span className="pc-quote">Sur devis</span><span className="pc-tot">prix selon quantité</span></>
+          ) : p.ppm2 != null ? (
+            <><span className="pc-big">{eur(p.ppm2)}<small>/m²</small></span><span className="pc-tot"><b>{eur(p.price)}</b><br />{unitWord}</span></>
           ) : (
-            <Link href={href} className="btn btn-sm btn-ghost">Options</Link>
+            <><span className="pc-big">{from && <small className="from">dès </small>}{eur(p.price)}</span><span className="pc-tot">{from ? "selon option" : unitWord}</span></>
           )}
         </div>
+        {canAdd ? (
+          <button type="button" className="btn btn-primary pc-act" aria-label={`Ajouter ${name} au panier`}
+            onClick={() => { add({ slug: p.slug, variantId: p.buyId, name: p.name, label: p.buyLabel, price: p.price as number, image: p.image, pickup: p.pickup }); notify("Ajouté au panier", { href: "/panier", label: "Voir le panier" }); }}>
+            Ajouter au panier
+          </button>
+        ) : p.price == null ? (
+          <Link href={`/contact?type=devis&produit=${encodeURIComponent(p.slug)}`} className="btn btn-ghost pc-act">Demander un devis</Link>
+        ) : (
+          <Link href={href} className="btn btn-primary pc-act">Choisir l'option</Link>
+        )}
       </div>
     </article>
   );

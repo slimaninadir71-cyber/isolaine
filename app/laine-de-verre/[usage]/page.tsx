@@ -42,7 +42,7 @@ export default async function UsagePage({ params }: Props) {
         <Link href="/laine-de-verre/materiel-de-pose" className="pill">Matériel de pose</Link>
       </nav>
 
-      <Listing products={items} lvFacets relevance orderLabel="Recommandés" showSub={false} />
+      <Listing products={items} lvFacets showSub={false} />
 
       {items.some((p) => p.cu === "palette" && p.ppm2 != null) && (
         <section className="section-tight" aria-labelledby="palettes">

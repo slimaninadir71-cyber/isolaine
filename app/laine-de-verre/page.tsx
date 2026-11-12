@@ -33,7 +33,7 @@ export default function LaineDeVerre() {
 
       <section className="section-tight" aria-labelledby="toutes">
         <h2 id="toutes">Toutes nos laines de verre</h2>
-        <Listing products={items} lvFacets relevance orderLabel="Recommandés" showSub={false} />
+        <Listing products={items} lvFacets showSub={false} />
       </section>
 
       <section className="section-tight" aria-labelledby="palettes">
