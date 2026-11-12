@@ -33,6 +33,13 @@ export async function POST(req: Request) {
   if (!isEmail(email)) return bad("Indiquez une adresse e-mail valide.");
   if (phone.replace(/\D/g, "").length < 6) return bad("Indiquez un numéro de téléphone valide.");
   if (mode === "livraison" && (!address || !/^\d{4,5}$/.test(postal) || !city)) return bad("Indiquez une adresse de livraison complète.");
+  // Adresse de facturation différente de la livraison (facultative, cochée par le client)
+  const b = body.billing && typeof body.billing === "object" ? (body.billing as Record<string, unknown>) : null;
+  const billing = b ? {
+    name: clean(b.name, 120), company: clean(b.company, 120) || undefined, address: clean(b.address, 250), postal: clean(b.postal, 12), city: clean(b.city, 120),
+    country: (b.country === "Belgique" ? "Belgique" : "France") as "France" | "Belgique",
+  } : null;
+  if (billing && (billing.name.length < 2 || !billing.address || !/^\d{4,5}$/.test(billing.postal) || !billing.city)) return bad("Indiquez une adresse de facturation complète.");
 
   const raw = Array.isArray(body.items) ? body.items.slice(0, 200) : [];
   const items: { slug: string; name: string; option: string; sku: string; qty: number; unit_price: number; total: number }[] = [];
@@ -68,6 +75,7 @@ export async function POST(req: Request) {
       reference: ref, status: "nouvelle", customer_name: name, company: clean(body.company, 120) || null, email, phone,
       address: mode === "livraison" ? address : null, postal_code: mode === "livraison" ? postal : null, city: mode === "livraison" ? city : null,
       country, delivery_mode: mode, payment_method: card ? "carte" : "sur confirmation", payment_status: card ? "en attente" : "aucun", notes: clean(body.notes, 2000) || null, items, subtotal, shipping: 0, discount, promo_code: discount > 0 ? promo : null, total,
+      ...(billing ? { billing } : {}),
     });
   } catch (e) {
     console.error("commande", (e as Error).message);
@@ -76,6 +84,7 @@ export async function POST(req: Request) {
   const mailLines: [string, string][] = [
     ["Référence", ref], ["Client", `${name}${clean(body.company, 120) ? ` (${clean(body.company, 120)})` : ""}`], ["E-mail", email], ["Téléphone", phone],
     ["Réception", mode === "livraison" ? `Livraison : ${address}, ${postal} ${city}, ${country}` : "Retrait en magasin"],
+    ...(billing ? [["Facturation", `${billing.name}${billing.company ? ` (${billing.company})` : ""}, ${billing.address}, ${billing.postal} ${billing.city}, ${billing.country}`] as [string, string]] : []),
     ["Articles", items.map((i) => `${i.qty} × ${i.name}${i.option ? ` (${i.option})` : ""} : ${i.total.toFixed(2)} €`).join("\n")],
     ...promoLine({ discount, promo_code: discount > 0 ? promo : null }),
     ["Total", `${total.toFixed(2)} € (livraison offerte)`],

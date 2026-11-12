@@ -14,10 +14,10 @@ const rows = async <T>(path: string) => (await (await sb(path, { method: "GET" }
 const patch = (path: string, body: Record<string, unknown>) => sb(path, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
 const q = encodeURIComponent;
 
-export type OrderRow = { reference: string; total: number; payment_status: string; payment_method: string; payment_id: string | null; customer_name: string; email: string; phone: string; delivery_mode: string; address: string | null; postal_code: string | null; city: string | null; country: string; discount?: number; promo_code?: string | null; items: { name: string; option: string; qty: number; unit_price: number; total: number }[] };
+export type OrderRow = { billing?: import("./types").Billing | null; reference: string; total: number; payment_status: string; payment_method: string; payment_id: string | null; customer_name: string; email: string; phone: string; delivery_mode: string; address: string | null; postal_code: string | null; city: string | null; country: string; discount?: number; promo_code?: string | null; items: { name: string; option: string; qty: number; unit_price: number; total: number }[] };
 
 export async function getOrder(reference: string): Promise<OrderRow | null> {
-  return (await rows<OrderRow>(`orders?reference=eq.${q(reference)}&select=reference,total,payment_status,payment_method,payment_id,customer_name,email,phone,delivery_mode,address,postal_code,city,country,discount,promo_code,items&limit=1`))[0] ?? null;
+  return (await rows<OrderRow>(`orders?reference=eq.${q(reference)}&select=reference,total,payment_status,payment_method,payment_id,customer_name,email,phone,delivery_mode,address,postal_code,city,country,billing,discount,promo_code,items&limit=1`))[0] ?? null;
 }
 export async function setPayment(reference: string, fields: Record<string, unknown>) {
   await patch(`orders?reference=eq.${q(reference)}`, fields);

@@ -58,3 +58,6 @@ export type Cover = { m2: number; unit: string; inner: { n: number; m2: number; 
 
 /** Rayon tel qu'affiché dans le menu et le pied de page */
 export type NavRayon = { key: string; slug: string; title: string; short: string; total: number; links: { href: string; name: string; count: number }[] };
+
+/** Adresse de facturation, quand le client en indique une différente de l'adresse de livraison */
+export type Billing = { name: string; company?: string; address: string; postal: string; city: string; country: "France" | "Belgique" };

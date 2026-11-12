@@ -1,7 +1,7 @@
 // Rapprochement d'un paiement : met à jour la commande et prévient l'équipe. Sans danger si appelé plusieurs fois (webhook et retour client).
 import { adminConfigured, markPaid, getOrder, setPayment } from "@/lib/supabase-admin";
 import { classify } from "@/lib/cawl";
-import { itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
+import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
 
 export type PaymentFacts = { id: string; status: string; amount?: number };
 
@@ -22,7 +22,7 @@ export async function reconcilePayment(reference: string, pay: PaymentFacts, opt
     await notifyTeam(`Paiement reçu – commande ${reference} – ${Number(order.total).toFixed(2)} €`, [
       ["Référence", reference], ["Client", order.customer_name], ["E-mail", order.email], ["Téléphone", order.phone],
       ["Réception", order.delivery_mode === "livraison" ? `Livraison : ${order.address}, ${order.postal_code} ${order.city}, ${order.country}` : "Retrait en magasin"],
-      ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
+      ...billingLine(order), ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
     ], order.email);
     await markPaid(order);
     await notifyCustomer(order);

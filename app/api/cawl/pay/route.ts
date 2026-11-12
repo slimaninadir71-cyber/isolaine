@@ -41,7 +41,9 @@ export async function POST(req: Request) {
   try {
     // Le montant est celui de la commande enregistrée (recalculé par le serveur), jamais un montant envoyé par le navigateur.
     resp = await createPayment(
-      { reference, total: Number(order.total), email: order.email, country: order.country === "Belgique" ? "Belgique" : "France", city: order.city ?? "", zip: order.postal_code ?? "", street: order.address ?? "" },
+      order.billing
+        ? { reference, total: Number(order.total), email: order.email, country: order.billing.country === "Belgique" ? "Belgique" : "France", city: order.billing.city, zip: order.billing.postal, street: order.billing.address }
+        : { reference, total: Number(order.total), email: order.email, country: order.country === "Belgique" ? "Belgique" : "France", city: order.city ?? "", zip: order.postal_code ?? "", street: order.address ?? "" },
       token, device, `${SITE.url}/api/cawl/return?ref=${encodeURIComponent(reference)}`,
     );
   } catch (e) {

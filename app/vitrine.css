@@ -410,3 +410,6 @@ a { color: var(--g7); }
 .drawer-top .logo-img { height: 32px; }
 .ftr-brand .logo-img { height: 38px; }
 @media (min-width: 1000px) { .hdr .logo-img { height: 40px; } }
+
+/* Commande : case « adresse de facturation différente » */
+.bill-toggle { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); font-weight: 600; }

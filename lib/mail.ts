@@ -28,7 +28,7 @@ export async function notifyTeam(subject: string, lines: [string, string][], rep
 }
 
 type Line = { qty: number; name: string; option?: string | null; unit_price?: number | null; total?: number | null };
-type ConfirmOrder = { reference: string; customer_name?: string | null; email?: string | null; phone?: string | null; total: number | string; delivery_mode?: string | null; address?: string | null; postal_code?: string | null; city?: string | null; country?: string | null; discount?: number | string | null; promo_code?: string | null; items?: Line[] };
+type ConfirmOrder = { billing?: import("./types").Billing | null; reference: string; customer_name?: string | null; email?: string | null; phone?: string | null; total: number | string; delivery_mode?: string | null; address?: string | null; postal_code?: string | null; city?: string | null; country?: string | null; discount?: number | string | null; promo_code?: string | null; items?: Line[] };
 
 const money = (n: unknown) => Number(n).toFixed(2).replace(".", ",") + " €";
 const lineText = (i: Line) => `${i.qty} × ${i.name}${i.option ? ` (${i.option})` : ""}${i.total != null ? ` : ${money(i.total)}` : ""}`;
@@ -36,6 +36,9 @@ const lineText = (i: Line) => `${i.qty} × ${i.name}${i.option ? ` (${i.option})
 /** Ligne « Code promo » pour l'e-mail de l'équipe (vide si aucun code). */
 export const promoLine = (o: { discount?: number | string | null; promo_code?: string | null }): [string, string][] => (o.promo_code && Number(o.discount) > 0 ? [["Code promo", `${o.promo_code} : −${money(o.discount)}`]] : []);
 export const itemsText = (items: Line[] = []) => items.map(lineText).join("\n");
+/** Ligne « Facturation » pour l'e-mail de l'équipe (vide si le client n'a pas indiqué d'adresse de facturation différente). */
+export const billingLine = (o: { billing?: import("./types").Billing | null }): [string, string][] =>
+  (o.billing ? [["Facturation", `${o.billing.name}${o.billing.company ? ` (${o.billing.company})` : ""}, ${o.billing.address}, ${o.billing.postal} ${o.billing.city}, ${o.billing.country}`]] : []);
 
 /** E-mail de confirmation envoyé au client après un paiement accepté (récapitulatif de la commande). Ne lève jamais d'erreur. */
 export async function notifyCustomer(order: ConfirmOrder) {
@@ -48,6 +51,8 @@ export async function notifyCustomer(order: ConfirmOrder) {
     const items = order.items ?? [];
     const delivered = order.delivery_mode === "livraison" && !!order.address;
     const where = delivered ? `${order.address}\n${order.postal_code ?? ""} ${order.city ?? ""}\n${order.country ?? ""}` : "";
+    const b = order.billing;
+    const bill = b ? `${b.name}${b.company ? `\n${b.company}` : ""}\n${b.address}\n${b.postal} ${b.city}\n${b.country}` : "";
     const name = (order.customer_name ?? "").trim();
     const promo = !!order.promo_code && Number(order.discount) > 0;
     const subject = `Confirmation de votre commande ${order.reference} – Isolaine`;
@@ -64,6 +69,7 @@ export async function notifyCustomer(order: ConfirmOrder) {
       `Total payé : ${total}`,
       "",
       delivered ? `ADRESSE DE LIVRAISON\n${where}\n` : "",
+      bill ? `ADRESSE DE FACTURATION\n${bill}\n` : "",
       "Livraison offerte",
       "Votre commande est expédiée sous 24 h. Comptez environ 7 jours pour la livraison.",
       "",
@@ -85,6 +91,7 @@ ${promo ? line(`Code promo ${esc(order.promo_code)}`, `−${esc(money(order.disc
 ${line("Livraison", "<b>Offerte</b>", "#28734B")}
 <tr><td style="padding:12px 0 0;border-top:2px solid #173D32;font-size:18px"><b>Total payé</b></td><td style="padding:12px 0 0;border-top:2px solid #173D32;text-align:right;font-size:18px;white-space:nowrap"><b>${esc(total)}</b></td></tr></table>
 ${delivered ? `<h2 style="margin:26px 0 6px;font-size:18px;color:#173D32">Adresse de livraison</h2><p style="margin:0;white-space:pre-line">${esc(where)}</p>` : ""}
+${bill ? `<h2 style="margin:20px 0 6px;font-size:18px;color:#173D32">Adresse de facturation</h2><p style="margin:0;white-space:pre-line">${esc(bill)}</p>` : ""}
 <div style="margin:24px 0 6px;padding:14px 16px;background:#F1F6E1;border-left:4px solid #A8CD38;border-radius:3px"><b>Livraison offerte</b><br>Votre commande est expédiée sous 24 h. Comptez environ 7 jours pour la livraison.</div>
 <p style="margin:22px 0 0"><a href="${SITE.url}" style="display:inline-block;padding:13px 20px;background:#A8CD38;color:#173D32;font-weight:bold;border-radius:3px;text-decoration:none">Retourner sur iso-laine.com</a></p>`;
     const mail = layout(subject, { html: body, text }, { commercial: false, unsubscribe: "", why: `Vous recevez cet e-mail suite à votre commande ${order.reference} sur ${SITE.domain}. Conservez-le : il fait office de récapitulatif de commande.` });

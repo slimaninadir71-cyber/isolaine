@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { classify, verifyWebhook } from "@/lib/cawl";
 import { adminConfigured, markPaid, getOrder, setPayment } from "@/lib/supabase-admin";
-import { itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
+import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
           await notifyTeam(`Paiement reçu – commande ${ref} – ${Number(order.total).toFixed(2)} €`, [
             ["Référence", ref], ["Client", order.customer_name], ["E-mail", order.email], ["Téléphone", order.phone],
             ["Réception", order.delivery_mode === "livraison" ? `Livraison : ${order.address}, ${order.postal_code} ${order.city}, ${order.country}` : "Retrait en magasin"],
-            ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
+            ...billingLine(order), ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
           ], order.email);
           await markPaid(order);
           await notifyCustomer(order);

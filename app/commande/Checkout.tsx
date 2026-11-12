@@ -20,6 +20,10 @@ export function Checkout({ cardEnabled = false }: { cardEnabled?: boolean }) {
   const { items, ready, subtotal, clear } = useCart();
   const router = useRouter();
   const [f, setF] = useState<Record<Field, string>>({ name: "", company: "", email: "", phone: "", address: "", postal: "", city: "", country: "France", notes: "" });
+  // Adresse de facturation différente : facultative, cochée par le client
+  const [billDiff, setBillDiff] = useState(false);
+  const [bill, setBill] = useState({ name: "", company: "", address: "", postal: "", city: "", country: "France" });
+  const setB = (k: keyof typeof bill) => (e: { target: { value: string } }) => setBill((s) => ({ ...s, [k]: e.target.value }));
   const [cgv, setCgv] = useState(false);
   const [busy, setBusy] = useState(false);
   const frame = useRef<CardFrame | null>(null);
@@ -131,7 +135,7 @@ export function Checkout({ cardEnabled = false }: { cardEnabled?: boolean }) {
       const res = await fetch("/api/commande", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...f, mode: "livraison", website: hp, promo: promo?.code ?? "", pay: byCard ? "card" : "later", items: items.map((i) => ({ slug: i.slug, variantId: i.variantId, qty: i.qty })) }),
+        body: JSON.stringify({ ...f, billing: billDiff ? bill : null, mode: "livraison", website: hp, promo: promo?.code ?? "", pay: byCard ? "card" : "later", items: items.map((i) => ({ slug: i.slug, variantId: i.variantId, qty: i.qty })) }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.reference) throw new Error(data.error || "La commande n'a pas pu être enregistrée.");
@@ -178,7 +182,21 @@ export function Checkout({ cardEnabled = false }: { cardEnabled?: boolean }) {
               <summary>Ajouter une précision (accès chantier, créneau…)</summary>
               <label><span className="sr-only">Message</span><textarea name="notes" rows={3} maxLength={2000} placeholder="Accès chantier, créneau de livraison, référence de devis…" value={f.notes} onChange={set("notes")} /></label>
             </details>
+            <label className="check bill-toggle"><input type="checkbox" checked={billDiff} onChange={(e) => setBillDiff(e.target.checked)} /> <span>Adresse de facturation différente de l'adresse de livraison</span></label>
           </fieldset>
+          {billDiff && (
+            <fieldset>
+              <legend>Adresse de facturation</legend>
+              <div className="form-grid">
+                <label>Nom ou raison sociale *<input required name="bill-name" autoComplete="billing name" minLength={2} maxLength={120} value={bill.name} onChange={setB("name")} /></label>
+                <label>Société <small>(facultatif)</small><input name="bill-company" autoComplete="billing organization" maxLength={120} value={bill.company} onChange={setB("company")} /></label>
+                <label className="span2">Adresse *<input required name="bill-address" autoComplete="billing street-address" maxLength={250} value={bill.address} onChange={setB("address")} /></label>
+                <label>Code postal *<input required name="bill-postal" autoComplete="billing postal-code" inputMode="numeric" pattern="[0-9]{4,5}" title="4 ou 5 chiffres" value={bill.postal} onChange={setB("postal")} /></label>
+                <label>Ville *<input required name="bill-city" autoComplete="billing address-level2" maxLength={120} value={bill.city} onChange={setB("city")} /></label>
+                <label>Pays *<select name="bill-country" value={bill.country} onChange={setB("country")}><option>France</option><option>Belgique</option></select></label>
+              </div>
+            </fieldset>
+          )}
           <div className="hp" aria-hidden="true"><label>Site web<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
           {cardEnabled && (
             <fieldset>
