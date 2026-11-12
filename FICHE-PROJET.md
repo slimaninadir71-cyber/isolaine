@@ -5,18 +5,23 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé) |
-| Vercel | équipe `dokmai`, projet `isolaine-demo` |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `refonte-sur-site-en-ligne` |
+| Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
 | Base de données | Supabase `kquzvuhieiavbwtutpfi` (projet « isolaine ») |
-| Activité | Laine de verre, isolants et matériaux, livraison en France métropolitaine et Belgique |
+| Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
+| Activité | Isolants, ossature, matériel de pose, outillage ; livraison en France métropolitaine et Belgique |
 
 Règles :
-- Ne jamais relier ce projet Vercel à un autre dépôt (ChaudBois, Maxi Market…).
-- Toute modification passe d'abord par une branche et une version d'essai, puis seulement par la mise en ligne.
-- Version de référence en ligne au 24 octobre 2026 : déploiement `isolaine-demo-ikw0c3hgz` (palette « Forêt et lin » : vert sapin, jaune blé, fond lin, commit `4b93d0b`).
-- Versions précédentes, pour un retour en arrière : `isolaine-demo-mjeq8rgcg` (accueil façon vitrine, bleu nuit et jaune, contenu identique à `isolaine-demo-ktusx6fw2`), `isolaine-demo-lezssinmm` (première refonte de l'accueil), puis `isolaine-demo-dr8pwgs8g` (23 octobre 2026).
+- **Ne jamais toucher au paiement** (`lib/cawl.ts`, `app/api/cawl/*`, `app/api/commande`, `app/commande/*`, `lib/reconcile.ts`) sans demande explicite : le site encaisse.
+- Ne jamais relier ce projet Vercel à un autre dépôt. L'ancien projet `isolaine-demo` a été renommé `destocklaine` et sert destocklaine.com : ne jamais y déployer Iso-Laine.
+- Toute modification passe d'abord par une branche et une version d'essai (aperçu Vercel), puis seulement par la mise en ligne.
+- Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production).
+
+Versions en ligne :
+- 12 novembre 2026 : déploiement `isolaine-38vqd7lws` (commit `222ffe5`) — refonte « vitrine » : 5 rayons (Isolation, Fixation & ossature, Matériel de pose, Outillage, Autres produits), carrousels, tri « Les plus demandés », palette vert foncé / vert clair ; remise −20 %, paiement CAWL, guide et BIENVENUE10 inchangés.
+- Retour en arrière possible vers `isolaine-rm7u1cbzd` (version du 12 novembre au matin, construite depuis les paquets Supabase).
 
 Construction :
-- Le code source complet est dans ce dépôt (récupéré le 24 octobre 2026 depuis l'ancien stockage Supabase, empreintes vérifiées).
-- Au moment du build, `scripts/fetch-catalog.mjs` lit le catalogue (produits, photos) dans Supabase.
-- GitHub vérifie automatiquement que le site se construit à chaque envoi (onglet Actions).
+- Le code complet est dans ce dépôt. La branche `site-en-ligne` est la copie fidèle du site au 12 novembre 2026, reconstituée depuis les paquets Supabase `site-a` … `site-ap` (les paquets `site-aq` et suivants concernent Destocklaine). Ces paquets ne sont plus la source de vérité : ne plus déployer par ce moyen, sous peine d'effacer la refonte.
+- Au moment du build, `scripts/fetch-catalog.mjs` lit le catalogue (produits, photos) dans Supabase et applique la remise de 20 % (prix facturé = prix remisé).
+- L'ordre « Les plus demandés » est calculé dans `lib/score.ts` (commandes reçues + demande du marché) ; les rayons sont définis dans `lib/rayons.ts`.
