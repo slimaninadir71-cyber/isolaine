@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `logo-et-guide` (= `correctif-fiches-mobile` + nouveau logo et guide vert) |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `adresse-facturation` (= `logo-et-guide` + adresse de facturation différente) |
 | Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
 | Base de données | Supabase **`farcbnukknieppsxnzga`** (« isolaine-boutique », variable `NEXT_PUBLIC_SUPABASE_URL` sur Vercel). `kquzvuhieiavbwtutpfi` (projet Supabase encore nommé « isolaine ») est la base de **Destocklaine** : ne pas y toucher. |
 | Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
@@ -18,6 +18,7 @@ Règles :
 - Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production).
 
 Versions en ligne :
+- 12 novembre 2026, nuit : déploiement `isolaine-fgfnzkby8` (commit `821cf4b`, branche `adresse-facturation`) — case « Adresse de facturation différente » à la commande ; adresse enregistrée dans `orders.billing` (jsonb, colonne ajoutée le 12/11 dans la base `farcbnukknieppsxnzga`), reprise dans les e-mails client et équipe, et transmise à CAWL pour le 3-D Secure quand elle existe. Montants inchangés. Retour en arrière : `isolaine-csfptnk98` (la colonne peut rester).
 - 12 novembre 2026, nuit : déploiement `isolaine-csfptnk98` (commit `f5d1275`, branche `logo-et-guide`) — nouveau logo Isolaine (fichiers dans `public/img/logo`) dans l'en-tête, le pied de page, le menu mobile, les icônes et l'en-tête des e-mails. Guide PDF repeint aux couleurs du site avec le logo : `docs/guide-isolation-isolaine.pdf`, à envoyer depuis l'administration (le PDF servi aux clients est stocké dans Supabase, pas dans le code). Retour en arrière : `isolaine-ias7ei8ah`.
 - 12 novembre 2026, soir : déploiement `isolaine-ias7ei8ah` (commit `9f4fd5d`, branche `correctif-fiches-mobile`, créée depuis `habillage-mails-vert`) — fiches produit lisibles sur téléphone : cartes verticales dans les rangées qui défilent, étiquettes « −20 % » et « Palette » côte à côte, prix payé en grand puis prix barré et prix au m². Affichage seulement ; prix, remise et paiement inchangés. Retour en arrière : `isolaine-og2icvbj6`.
 - 12 novembre 2026, 21 h 25 : déploiement `isolaine-og2icvbj6` (commit `91997c0`, branche `habillage-mails-vert`) — e-mails clients et e-mail équipe aux couleurs du site (vert foncé #173D32, vert clair #A8CD38, fond lin #F7F7F2). Habillage seulement, textes et paiement inchangés.
