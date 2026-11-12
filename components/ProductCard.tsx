@@ -44,6 +44,9 @@ export function ProductCard({ p, priority = false, label }: { p: Card; priority?
         <div className="pc-price">
           {p.price == null ? (
             <><span className="pc-quote">Sur devis</span><span className="pc-tot">prix selon quantité</span></>
+          ) : p.ppm2 != null && p.cu === "palette" ? (
+            // Palette : le prix à payer (la palette) est mis en avant, le prix au m² passe en repère
+            <><span className="pc-big">{eur(p.price)}</span><span className="pc-tot"><WasPrice was={p.was} price={p.price} />{promo ? <br /> : null}la palette, soit <b>{eur(p.ppm2)}/m²</b></span></>
           ) : p.ppm2 != null ? (
             <><span className="pc-big">{eur(p.ppm2)}<small>/m²</small></span><span className="pc-tot"><WasPrice was={p.was} price={p.price} /> <b>{eur(p.price)}</b><br />{unitWord}</span></>
           ) : (

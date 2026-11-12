@@ -133,7 +133,8 @@ a { color: var(--g7); }
 @media (max-width: 519px) {
   .grid .pc { display: grid; grid-template-columns: 116px minmax(0, 1fr); }
   .grid .pc-img { aspect-ratio: auto; border-bottom: 0; border-right: 1px solid #EEF0ED; padding: 10px; }
-  .grid .pc-flag { top: 8px; left: 8px; font-size: 10px; padding: 3px 6px; }
+  /* Colonne photo étroite : l'étiquette (Palette, Retrait magasin) passe sous la pastille −20 % au lieu de la chevaucher */
+  .grid .pc-flag { top: 40px; left: auto; right: 10px; font-size: 10px; padding: 3px 6px; }
   .grid .pc-b { padding: 12px 14px 14px; }
   .grid .pc-name { font-size: 15px; min-height: 0; margin: 2px 0 8px; }
   .grid .pc-specs { font-size: 12.5px; margin-bottom: 8px; }
