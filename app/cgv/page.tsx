@@ -21,36 +21,40 @@ export default function Page() {
       <p>
         Les produits sont décrits avec la plus grande exactitude possible (désignation, caractéristiques, conditionnement, références).
         Les photographies sont fournies à titre d'illustration. Les caractéristiques techniques détaillées sont celles communiquées par les
-        fabricants. Certains produits, signalés sur leur fiche, sont disponibles sur approvisionnement et uniquement en retrait en magasin.
+        fabricants.
       </p>
       <h2>Article 4 – Prix</h2>
       <p>
         Les prix sont indiqués en euros, toutes taxes comprises. Le prix applicable est celui affiché sur le site au moment de l'envoi
-        de la commande. La livraison est offerte en France métropolitaine et en Belgique, sauf pour les produits proposés uniquement en
-        retrait en magasin. Les produits « sur devis » font l'objet d'une proposition de prix personnalisée.
+        de la commande. La livraison est offerte en France métropolitaine et en Belgique. Les produits « sur devis » font l'objet d'une proposition de prix personnalisée.
+      </p>
+      <p>
+        <b>Code de bienvenue.</b> Le code BIENVENUE10 donne 10 % de remise sur le montant des produits, en plus des prix affichés sur le site.
+        Il est réservé aux personnes inscrites au guide gratuit du site, pour leur première commande passée avec la même adresse e-mail, et ne
+        peut être utilisé qu'une seule fois. Il n'est pas cumulable avec un autre code promotionnel, ne s'applique pas aux produits « sur devis »
+        et n'est ni échangeable ni remboursable. Le Vendeur peut modifier ou arrêter cette offre à tout moment pour les commandes à venir.
       </p>
       <h2>Article 5 – Commande</h2>
       <p>
         Le Client sélectionne ses produits, vérifie le récapitulatif de son panier, renseigne ses coordonnées, accepte les CGV puis envoie
-        sa commande. Un numéro de commande lui est attribué. Le Vendeur vérifie la disponibilité des produits puis adresse au Client une
-        confirmation précisant les modalités de livraison ou de retrait et de règlement. La vente est conclue à l'acceptation de cette
-        confirmation par le Client. Le Vendeur se réserve le droit de refuser une commande présentant un caractère anormal ou émanant d'un
+        sa commande. Un numéro de commande lui est attribué. Le règlement par carte bancaire est demandé à cette étape ; le Vendeur adresse au Client
+        un e-mail de confirmation précisant les modalités de livraison. La vente est conclue au paiement de la commande. Le Vendeur se réserve le droit de refuser une commande présentant un caractère anormal ou émanant d'un
         Client avec lequel existe un litige. En cas d'indisponibilité d'un produit, le Client en est informé et aucune somme ne lui est due
         pour ce produit.
       </p>
       <h2>Article 6 – Règlement</h2>
       <p>
-        Aucun paiement n'est demandé lors de l'envoi de la commande en ligne. Les modalités et le délai de règlement sont indiqués dans la
-        confirmation adressée par le Vendeur. Les produits restent la propriété du Vendeur jusqu'au paiement intégral du prix.
+        Le règlement s'effectue en ligne par carte bancaire, au moment de la commande, via un service de paiement sécurisé avec
+        authentification 3-D Secure. Les données de carte sont saisies directement auprès du prestataire de paiement et ne sont pas
+        conservées par le Vendeur. Les produits restent la propriété du Vendeur jusqu'au paiement intégral du prix.
       </p>
-      <h2>Article 7 – Livraison et retrait</h2>
+      <h2>Article 7 – Livraison</h2>
       <p>
         Les produits sont livrés à l'adresse indiquée par le Client, en France métropolitaine ou en Belgique. Le délai de livraison est
         précisé dans la confirmation de commande ; à défaut, la livraison intervient au plus tard trente jours après la conclusion du
         contrat (article L216-1 du Code de la consommation). Le Client vérifie l'état des colis à la réception et porte sur le bon du
         transporteur des réserves précises en cas d'avarie ou de manquant. Pour un Client professionnel, ces réserves sont confirmées au
-        transporteur dans les trois jours suivant la réception (article L133-3 du Code de commerce). Les produits en retrait en magasin
-        sont mis à disposition selon les modalités indiquées dans la confirmation. Le transfert des risques au Client consommateur
+        transporteur dans les trois jours suivant la réception (article L133-3 du Code de commerce). Le transfert des risques au Client consommateur
         intervient lorsqu'il prend physiquement possession des produits.
       </p>
       <h2>Article 8 – Droit de rétractation (consommateurs)</h2>

@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { eur, num, priceText } from "@/lib/format";
 import type { Card } from "@/lib/types";
 import { IconChevron } from "./Icons";
+import { PromoSticker, WasPrice } from "./Promo";
 
-export type Slide = Pick<Card, "slug" | "name" | "brand" | "image" | "price" | "priceMax" | "variable" | "ppm2" | "thickness" | "r" | "facing" | "cu">;
+export type Slide = Pick<Card, "slug" | "name" | "brand" | "image" | "price" | "was" | "priceMax" | "variable" | "ppm2" | "thickness" | "r" | "facing" | "cu">;
 
 const SPEED = 30; // pixels par seconde
 
@@ -57,6 +58,7 @@ export function ProductCarousel({ items, label }: { items: Slide[]; label: strin
     <Link key={`${dup ? "b" : "a"}-${p.slug}`} href={`/produit/${p.slug}`} className="cs-card" tabIndex={dup ? -1 : undefined} aria-hidden={dup || undefined} draggable={false}>
       <span className="cs-img">
         {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" draggable={false} /> : null}
+        {p.was != null && p.price != null && p.was > p.price && <PromoSticker />}
         {p.cu === "palette" && <span className="cs-flag">Palette</span>}
       </span>
       <span className="cs-body">
@@ -68,7 +70,7 @@ export function ProductCarousel({ items, label }: { items: Slide[]; label: strin
           {p.facing ? <span>{p.facing}</span> : null}
         </span>
         <span className="cs-price">
-          <b>{priceText(p)}</b>
+          <b><WasPrice was={p.was} price={p.price} />{priceText(p)}</b>
           {p.ppm2 != null && <small>soit {eur(p.ppm2)}/m²</small>}
         </span>
       </span>

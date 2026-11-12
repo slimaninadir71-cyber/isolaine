@@ -13,6 +13,8 @@ export type Card = {
   w: number;
   h: number;
   price: number | null;
+  /** Prix avant remise de −20 % */
+  was?: number | null;
   priceMax: number | null;
   variable: boolean;
   nvar: number;
@@ -38,7 +40,7 @@ export type SubFamily = { slug: string; name: string; count: number; image: stri
 export type Family = { key: string; slug: string; name: string; count: number; image: string; subs: SubFamily[] };
 export type NavFamily = { slug: string; name: string; count: number; subs: { slug: string; name: string; count: number }[] };
 
-export type Variant = { id: string; label: string; price: number; sku: string };
+export type Variant = { id: string; label: string; price: number; was?: number; sku: string };
 export type Photo = { src: string; sm: string; w: number; h: number };
 export type Detail = {
   short: string;

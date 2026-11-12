@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart";
 import { cap, eur, num, unitWord } from "@/lib/format";
 import { SITE } from "@/lib/site";
 import type { Cover, Variant } from "@/lib/types";
+import { PromoSticker, WasPrice } from "./Promo";
 import { IconCart, IconMinus, IconPlus, IconQuote, IconStore, IconTruck } from "./Icons";
 
 type P = { slug: string; name: string; image: string; pickup: boolean };
@@ -50,7 +51,8 @@ export function BuyBox({ product, variants, lead, cover }: { product: P; variant
   return (
     <div className="buy">
       <p className="buy-price">
-        {!v && multi && min !== max ? <><small>À partir de</small> {eur(min as number)}</> : eur(price as number)}
+        {v ? <><WasPrice was={v.was} price={v.price} />{eur(price as number)}{v.was != null && v.was > v.price && <PromoSticker className="promo-inline" />}</>
+          : multi && min !== max ? <><small>À partir de</small> {eur(min as number)}<PromoSticker className="promo-inline" /></> : <>{eur(price as number)}<PromoSticker className="promo-inline" /></>}
       </p>
       {cv && v && (
         <div className="cover">
@@ -128,6 +130,6 @@ function Delivery({ pickup, lead }: { pickup: boolean; lead: string }) {
   return pickup ? (
     <div className="buy-ship pickup"><IconStore size={20} /><p><b>Retrait en magasin uniquement</b>{lead && <><br />Délai d'approvisionnement : {lead}</>}</p></div>
   ) : (
-    <div className="buy-ship"><IconTruck size={20} /><p><b>Livraison offerte</b> {SITE.delivery.replace("Livraison offerte ", "")}<br />{lead ? `Délai d'approvisionnement : ${lead}` : <b>{SITE.shipping}</b>}</p></div>
+    <div className="buy-ship"><IconTruck size={20} /><p><b>Livraison offerte</b><br />{SITE.delivery.replace("Livraison offerte ", "")}<br />{SITE.ship} ({SITE.eta}){lead ? ` · délai d'approvisionnement : ${lead}` : ""}</p></div>
   );
 }

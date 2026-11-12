@@ -82,6 +82,9 @@ export function tidyName(name) {
 // Laine de verre : usage, revêtement, mode de vente et surface couverte, lus dans le nom et la fiche
 const num = (s) => Number(String(s).replace(/\s/g, "").replace(",", "."));
 const round2 = (x) => Math.round(x * 100) / 100;
+// Promotion : −20 % sur tout le catalogue. Le prix affiché ET le prix facturé sont les prix réduits (la commande lit ce catalogue) ; « was » garde le prix d'origine.
+const PROMO_PCT = 20;
+const disc = (x) => Math.round(Math.round(x * 100) * (100 - PROMO_PCT) / 100) / 100;
 function lvUse(name) {
   if (/souffl/i.test(name)) return "souffler";
   if (/\bGR\s?32\b/i.test(name)) return "murs";
@@ -149,6 +152,8 @@ async function saveImage(src, base) {
   return null;
 }
 
+// Articles « retrait uniquement en magasin » : la boutique ne fait que de la livraison, on ne les publie pas (les lignes restent en base).
+const pickupRow = (p) => PICKUP.test([...(p.attributes ?? []).flatMap((a) => a.values ?? []), ...(p.product_variants ?? []).map((v) => v.label)].join(" | ")) || PICKUP.test(p.description ?? "");
 const rows = await loadRows();
 if (!rows.length) throw new Error("Catalogue vide");
 mkdirSync("public/img/p", { recursive: true });
@@ -156,7 +161,7 @@ mkdirSync("public/img/p", { recursive: true });
 // Photos (optimisées en parallèle)
 const imgOf = new Map();
 if (!FIXTURE) {
-  const jobs = rows.flatMap((p) => (p.images ?? []).slice(0, 3).map((src, i) => ({ key: `${p.slug}#${i}`, src, base: `${p.slug}-${i + 1}` })));
+  const jobs = rows.filter((p) => !pickupRow(p)).flatMap((p) => (p.images ?? []).slice(0, 3).map((src, i) => ({ key: `${p.slug}#${i}`, src, base: `${p.slug}-${i + 1}` })));
   let cursor = 0;
   await Promise.all(Array.from({ length: 8 }, async () => {
     while (cursor < jobs.length) { const j = jobs[cursor++]; const r = await saveImage(j.src, j.base); if (r) imgOf.set(j.key, r); }
@@ -165,6 +170,7 @@ if (!FIXTURE) {
 }
 
 const products = [], details = {}, subs = new Map();
+let skipped = 0;
 for (const p of rows) {
   p.name = tidyName(dec(p.name)); p.sku = dec(p.sku); p.short_description = stripBoiler(dec(p.short_description)); p.description = stripBoiler(dec(p.description));
   p.attributes = (p.attributes ?? []).map((a) => ({ name: dec(a.name), values: (a.values ?? []).map(dec) }));
@@ -175,15 +181,18 @@ for (const p of rows) {
   const variantsRaw = (p.product_variants ?? []).slice().sort((a, b) => Number(a.price) - Number(b.price) || a.position - b.position);
   const allText = [...attrsRaw.flatMap((a) => a.values), ...variantsRaw.map((v) => v.label)].join(" | ");
   const pickup = PICKUP.test(allText) || PICKUP.test(p.description ?? "");
+  if (pickup) { skipped++; continue; }
   const lead = (allText.match(LEAD)?.[1] ?? "").trim();
-  const variants = variantsRaw.map((v) => ({ id: String(v.id), label: cleanLabel(v.label) || "Unité", price: Number(v.price), sku: v.sku || "" }));
+  const variants = variantsRaw.map((v) => ({ id: String(v.id), label: cleanLabel(v.label) || "Unité", price: disc(Number(v.price)), was: Number(v.price), sku: v.sku || "" }));
   const attrs = attrsRaw
     .filter((a) => !(/^poids$/i.test(a.name) && !a.values.some(hasUnit)))
     .map((a) => ({ name: a.name, values: [...new Set(a.values.map(cleanLabel))].filter(Boolean) }))
     .filter((a) => a.values.length);
   const images = (p.images ?? []).slice(0, 3).map((_, i) => imgOf.get(`${p.slug}#${i}`)).filter(Boolean);
   const prices = variants.map((v) => v.price).filter((x) => x > 0);
-  const price = prices.length ? Math.min(...prices) : (p.price == null ? null : Number(p.price));
+  const price = prices.length ? Math.min(...prices) : (p.price == null ? null : disc(Number(p.price)));
+  const wasList = variants.map((v) => v.was).filter((x) => x > 0);
+  const was = wasList.length ? Math.min(...wasList) : (p.price == null ? null : Number(p.price));
   const priceMax = prices.length ? Math.max(...prices) : price;
   const thickness = fam.slug === "isolants" ? thicknessOf(p.name) : null;
   const lv = fam.slug === "isolants" && subSlug === "laine-de-verre";
@@ -191,7 +200,7 @@ for (const p of rows) {
     id: p.id, slug: p.slug, name: p.name, brand: p.brand || "", sku: p.sku || "",
     family: fam.slug, familyName: fam.name, sub: subSlug, subName: p.sub || fam.name,
     image: images[0]?.sm ?? "", w: images[0]?.w ?? 0, h: images[0]?.h ?? 0,
-    price, priceMax, variable: variants.length > 1, nvar: variants.length,
+    price, was, priceMax, variable: variants.length > 1, nvar: variants.length,
     buyId: variants.length === 1 ? variants[0].id : "", buyLabel: variants.length === 1 ? variants[0].label : "",
     pack: packOf(p.name), thickness, pickup, position: p.position ?? 0,
   };

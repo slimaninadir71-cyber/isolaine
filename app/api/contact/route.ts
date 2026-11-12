@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clean, insertRow, isEmail } from "@/lib/supabase-rest";
+import { notifyTeam } from "@/lib/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,5 +27,9 @@ export async function POST(req: Request) {
     console.error("contact", (e as Error).message);
     return bad("Votre demande n'a pas pu être envoyée. Réessayez dans un instant.", 502);
   }
+  await notifyTeam(kind === "devis" ? `Demande de devis de ${name}` : `Message de ${name}`, [
+    ["Type", kind === "devis" ? "Devis" : "Contact"], ["Nom", name], ["E-mail", email], ["Téléphone", clean(body.phone, 30) || "non indiqué"],
+    ["Société", clean(body.company, 120) || "non indiquée"], ["Produit", clean(body.product, 300) || "non précisé"], ["Message", message],
+  ], email);
   return NextResponse.json({ ok: true });
 }

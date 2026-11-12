@@ -4,6 +4,7 @@ import { useCart } from "@/lib/cart";
 import { coverText, eur, num, priceText } from "@/lib/format";
 import type { Card } from "@/lib/types";
 import { IconBox, IconCart, IconStore } from "./Icons";
+import { PromoSticker, WasPrice } from "./Promo";
 
 /** Carte produit : photo, marque, nom, caractéristiques clés, prix exact (et prix au m² si connu) et action adaptée. */
 export function ProductCard({ p, priority = false }: { p: Card; priority?: boolean }) {
@@ -17,6 +18,7 @@ export function ProductCard({ p, priority = false }: { p: Card; priority?: boole
         {p.image
           ? <img src={p.image} alt="" loading={priority ? "eager" : "lazy"} decoding="async" width={p.w ? Math.min(480, p.w) : undefined} height={p.h && p.w ? Math.round(Math.min(480, p.w) * p.h / p.w) : undefined} />
           : <span className="pcard-noimg"><IconBox size={34} /><small>Photo non disponible</small></span>}
+        {p.was != null && p.price != null && p.was > p.price && <PromoSticker />}
         {p.pickup && <span className="pcard-flag"><IconStore size={14} /> Retrait magasin</span>}
         {p.cu === "palette" && <span className="pcard-flag pcard-flag-pal">Palette</span>}
       </Link>
@@ -29,7 +31,7 @@ export function ProductCard({ p, priority = false }: { p: Card; priority?: boole
         {p.m2 && p.cu ? <p className="pcard-pack">{coverText(p.cu, p.m2)}</p> : p.pack && <p className="pcard-pack">{p.pack}</p>}
         <div className="pcard-foot">
           <div className="pcard-prices">
-            <p className={`pcard-price${p.price == null ? " quote" : ""}`}>{priceText(p)}</p>
+            <p className={`pcard-price${p.price == null ? " quote" : ""}`}><WasPrice was={p.was} price={p.price} />{priceText(p)}</p>
             {p.ppm2 != null && <p className="pcard-ppm2">soit <b>{eur(p.ppm2)}/m²</b></p>}
           </div>
           {canAdd ? (

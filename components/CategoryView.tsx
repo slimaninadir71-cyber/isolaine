@@ -48,12 +48,15 @@ export function CategoryView({ family, subSlug, items }: { family: Family; subSl
         </nav>
       )}
       {sub && family.subs.length > 1 && (
-        <nav className="sub-pills" aria-label="Autres sous-familles">
-          <Link href={`/categorie/${family.slug}`} className="pill">Toute la famille</Link>
-          {family.subs.filter((s) => s.slug !== sub.slug).map((s) => (
-            <Link key={s.slug} href={`/categorie/${family.slug}/${s.slug}`} className="pill">{s.name} <small>{s.count}</small></Link>
-          ))}
-        </nav>
+        <details className="sub-more">
+          <summary>Autres catégories <small>({family.subs.length - 1})</small></summary>
+          <nav className="sub-pills" aria-label="Autres sous-familles">
+            <Link href={`/categorie/${family.slug}`} className="pill">Toute la famille</Link>
+            {family.subs.filter((s) => s.slug !== sub.slug).map((s) => (
+              <Link key={s.slug} href={`/categorie/${family.slug}/${s.slug}`} className="pill">{s.name} <small>{s.count}</small></Link>
+            ))}
+          </nav>
+        </details>
       )}
 
       <Listing products={items} showSub={!sub} lvFacets={family.slug === "isolants" && sub?.slug === "laine-de-verre"} />

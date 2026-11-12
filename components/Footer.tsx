@@ -3,10 +3,12 @@ import type { NavFamily } from "@/lib/types";
 import { COMPANY, SITE } from "@/lib/site";
 import { LV_USES } from "@/lib/lv-labels";
 import { Logo } from "./Logo";
+import { LeadCapture } from "./LeadCapture";
 
 export default function Footer({ families }: { families: NavFamily[] }) {
   return (
     <footer className="ftr">
+      <div className="wrap"><LeadCapture source="pied-de-page" variant="footer" /></div>
       <div className="wrap ftr-grid">
         <div className="ftr-brand">
           <Logo light />
@@ -44,7 +46,7 @@ export default function Footer({ families }: { families: NavFamily[] }) {
       </div>
       <div className="wrap ftr-bottom">
         <span>© {new Date().getFullYear()} {SITE.name} – {SITE.domain}</span>
-        <span>Prix en euros. Règlement après confirmation de la commande.</span>
+        <span>Prix en euros. Paiement sécurisé par carte, livraison offerte.</span>
       </div>
     </footer>
   );

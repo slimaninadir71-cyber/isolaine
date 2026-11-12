@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { eur } from "@/lib/format";
 import { SITE } from "@/lib/site";
+import { LeadCapture } from "@/components/LeadCapture";
 import { IconBox, IconMinus, IconPlus, IconStore, IconTrash, IconTruck } from "@/components/Icons";
 
 export function CartView() {
@@ -52,11 +53,12 @@ export function CartView() {
           <div className="sum-row"><span>Sous-total</span><span>{eur(subtotal)}</span></div>
           <div className="sum-row"><span>Livraison</span><span className="ok">Offerte</span></div>
           <div className="sum-row sum-total"><span>Total</span><span>{eur(subtotal)}</span></div>
-          <p className="sum-note"><IconTruck size={16} /> {SITE.delivery}.</p>
-          {pickup && <p className="sum-note"><IconStore size={16} /> Certains articles sont à retirer en magasin : nous vous précisons les modalités à la confirmation.</p>}
+          <p className="sum-note"><IconTruck size={16} /> {SITE.delivery}. {SITE.ship}, {SITE.eta}.</p>
+          {pickup && <p className="sum-note"><IconStore size={16} /> Certains articles ne sont pas livrables : retirez-les du panier pour commander.</p>}
           <Link href="/commande" className="btn btn-primary btn-block">Passer commande</Link>
-          <p className="sum-small">Aucun paiement en ligne : notre équipe confirme la disponibilité et vous transmet les modalités de règlement.</p>
+          <p className="sum-small">Paiement par carte sécurisé à l'étape suivante. Livraison offerte.</p>
           <Link href="/boutique" className="link-arrow">Continuer mes achats</Link>
+          <LeadCapture source="panier" />
         </aside>
       </div>
     </div>

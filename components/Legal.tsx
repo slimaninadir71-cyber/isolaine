@@ -14,4 +14,4 @@ export function LegalPage({ title, updated, children }: { title: string; updated
   );
 }
 
-export const UPDATED = "21 octobre 2026";
+export const UPDATED = "11 novembre 2026";

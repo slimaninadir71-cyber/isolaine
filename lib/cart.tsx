@@ -27,7 +27,7 @@ type Ctx = {
 };
 
 const CartCtx = createContext<Ctx | null>(null);
-const KEY = "isolaine-panier-v2";
+const KEY = "isolaine-panier-v3";
 const MAX_QTY = 999;
 
 export function CartProvider({ children }: { children: ReactNode }) {
