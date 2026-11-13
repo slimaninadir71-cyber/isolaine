@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), **branche unique de référence : `main`** (identique à la version en ligne `isolaine-miqqdjgy0`). Toute modification part de `main`, dans une branche courte, puis revient dans `main` après la mise en ligne. Les anciennes branches sont archivées en étiquettes `archive/<nom>`. |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), **branche unique de référence : `main`** (identique à la version en ligne `isolaine-miqqdjgy0`). Toute modification part de `main`, dans une branche courte, puis revient dans `main` après la mise en ligne. Toutes les autres branches sont anciennes (déjà incluses dans `main` ou remplacées) : ne plus jamais partir de l'une d'elles. |
 | Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
 | Base de données | Supabase **`farcbnukknieppsxnzga`** (« isolaine-boutique », variable `NEXT_PUBLIC_SUPABASE_URL` sur Vercel). `kquzvuhieiavbwtutpfi` (projet Supabase encore nommé « isolaine ») est la base de **Destocklaine** : ne pas y toucher. |
 | Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
@@ -31,6 +31,6 @@ Versions en ligne :
 - Retour en arrière possible vers `isolaine-rm7u1cbzd` (version du 12 novembre au matin, construite depuis les paquets Supabase).
 
 Construction :
-- Le code complet est dans ce dépôt. L'étiquette `archive/site-en-ligne` est la copie fidèle du site au 12 novembre 2026, reconstituée depuis les paquets Supabase `site-a` … `site-ap` (les paquets `site-aq` et suivants concernent Destocklaine). Ces paquets ne sont plus la source de vérité : ne plus déployer par ce moyen, sous peine d'effacer la refonte.
+- Le code complet est dans ce dépôt. La branche `site-en-ligne` (ancienne, incluse dans `main`) est la copie fidèle du site au 12 novembre 2026, reconstituée depuis les paquets Supabase `site-a` … `site-ap` (les paquets `site-aq` et suivants concernent Destocklaine). Ces paquets ne sont plus la source de vérité : ne plus déployer par ce moyen, sous peine d'effacer la refonte.
 - Au moment du build, `scripts/fetch-catalog.mjs` lit le catalogue (produits, photos) dans Supabase et applique la remise de 20 % (prix facturé = prix remisé).
 - L'ordre « Les plus demandés » est calculé dans `lib/score.ts` (commandes reçues + demande du marché) ; les rayons sont définis dans `lib/rayons.ts`.
