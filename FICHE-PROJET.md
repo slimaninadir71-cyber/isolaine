@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `suivi-confirmation` (= `ecrire-au-client` + suivi de la confirmation client) |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), **branche unique de référence : `main`** (identique à la version en ligne `isolaine-miqqdjgy0`). Toute modification part de `main`, dans une branche courte, puis revient dans `main` après la mise en ligne. Les anciennes branches sont archivées en étiquettes `archive/<nom>`. |
 | Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
 | Base de données | Supabase **`farcbnukknieppsxnzga`** (« isolaine-boutique », variable `NEXT_PUBLIC_SUPABASE_URL` sur Vercel). `kquzvuhieiavbwtutpfi` (projet Supabase encore nommé « isolaine ») est la base de **Destocklaine** : ne pas y toucher. |
 | Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
@@ -15,7 +15,8 @@ Règles :
 - **Ne jamais toucher au paiement** (`lib/cawl.ts`, `app/api/cawl/*`, `app/api/commande`, `app/commande/*`, `lib/reconcile.ts`) sans demande explicite : le site encaisse.
 - Ne jamais relier ce projet Vercel à un autre dépôt. L'ancien projet `isolaine-demo` a été renommé `destocklaine` et sert destocklaine.com : ne jamais y déployer Iso-Laine.
 - Toute modification passe d'abord par une branche et une version d'essai (aperçu Vercel), puis seulement par la mise en ligne.
-- Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production).
+- Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production), puis ramener cette branche dans `main` (avance rapide) pour que `main` reste égale à la version en ligne.
+- Un seul intervenant à la fois sur le site (Claude Code ou Claude), toujours à partir de `main` à jour.
 
 Versions en ligne :
 - 13 novembre 2026, 10 h 40 : déploiement `isolaine-miqqdjgy0` (commit `c3239f5`, branche `suivi-confirmation`) — colonnes `orders.customer_mail_at` et `orders.customer_mail_error` (créées dans farcb le 13/11 avant la mise en ligne) ; la confirmation client est tracée après chaque paiement ; onglet Clients : colonne « Confirmation client » et bouton « Renvoyer la confirmation ».
@@ -30,6 +31,6 @@ Versions en ligne :
 - Retour en arrière possible vers `isolaine-rm7u1cbzd` (version du 12 novembre au matin, construite depuis les paquets Supabase).
 
 Construction :
-- Le code complet est dans ce dépôt. La branche `site-en-ligne` est la copie fidèle du site au 12 novembre 2026, reconstituée depuis les paquets Supabase `site-a` … `site-ap` (les paquets `site-aq` et suivants concernent Destocklaine). Ces paquets ne sont plus la source de vérité : ne plus déployer par ce moyen, sous peine d'effacer la refonte.
+- Le code complet est dans ce dépôt. L'étiquette `archive/site-en-ligne` est la copie fidèle du site au 12 novembre 2026, reconstituée depuis les paquets Supabase `site-a` … `site-ap` (les paquets `site-aq` et suivants concernent Destocklaine). Ces paquets ne sont plus la source de vérité : ne plus déployer par ce moyen, sous peine d'effacer la refonte.
 - Au moment du build, `scripts/fetch-catalog.mjs` lit le catalogue (produits, photos) dans Supabase et applique la remise de 20 % (prix facturé = prix remisé).
 - L'ordre « Les plus demandés » est calculé dans `lib/score.ts` (commandes reçues + demande du marché) ; les rayons sont définis dans `lib/rayons.ts`.
