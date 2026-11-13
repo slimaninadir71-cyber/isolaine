@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Site | https://iso-laine.com |
-| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `correctif-mail-guide` (= `adresse-facturation` + clé anti-doublon des e-mails propre à iso-laine.com) |
+| Code | GitHub `slimaninadir71-cyber/isolaine` (privé), branche de référence `ecrire-au-client` (= `adresse-facturation` + clé anti-doublon des e-mails propre à iso-laine.com + onglet Clients de l'administration) |
 | Vercel | équipe `dokmai`, projet **`isolaine`** (`prj_vJ88qLd3yLYANjMIHiaR5IVFvSQ1`), non relié à GitHub |
 | Base de données | Supabase **`farcbnukknieppsxnzga`** (« isolaine-boutique », variable `NEXT_PUBLIC_SUPABASE_URL` sur Vercel). `kquzvuhieiavbwtutpfi` (projet Supabase encore nommé « isolaine ») est la base de **Destocklaine** : ne pas y toucher. |
 | Paiement | CAWL, carte bancaire avec 3-D Secure (clés dans les variables d'environnement Vercel) |
@@ -18,6 +18,7 @@ Règles :
 - Mise en ligne : créer un déploiement de production du projet `isolaine` depuis la branche GitHub (source Git, cible production).
 
 Versions en ligne :
+- 13 novembre 2026, 10 h 30 : déploiement `isolaine-g77zyoizo` (commit `a0ae201`, branche `ecrire-au-client`) — onglet « Clients » dans /admin : messages reçus (Répondre), commandes (Écrire), formulaire libre ; envoi depuis commandes@iso-laine.com, reply-to et copie cachée vers ORDER_EMAIL_TO. Paiement et e-mails automatiques inchangés.
 - 13 novembre 2026, 10 h 20 : colonne `orders.billing` (jsonb) ajoutée dans la base Iso-Laine `farcbnukknieppsxnzga`. Elle manquait depuis la mise en ligne de l'adresse de facturation (12/11, 23 h 46) : le paiement par carte et les commandes avec adresse de facturation échouaient. Toute nouvelle colonne doit être créée dans **farcb** AVANT la mise en ligne.
 - 13 novembre 2026, 10 h 08 : déploiement `isolaine-asevjkwef` (commit `1ce4848`, branche `correctif-mail-guide`) — clé anti-doublon des e-mails du guide propre à iso-laine.com (`iso-laine.com-campagne-…`). Le compte Resend est partagé avec Destocklaine : l'ancienne clé `isolaine-…` entrait en conflit (erreur 409, guide non reçu par le prospect n°2 du 12/11). Rien d'autre de modifié.
 - 12 novembre 2026, nuit : déploiement `isolaine-fgfnzkby8` (commit `821cf4b`, branche `adresse-facturation`) — case « Adresse de facturation différente » à la commande ; adresse enregistrée dans `orders.billing` (jsonb, colonne ajoutée le 12/11 dans la base `farcbnukknieppsxnzga`), reprise dans les e-mails client et équipe, et transmise à CAWL pour le 3-D Secure quand elle existe. Montants inchangés. Retour en arrière : `isolaine-csfptnk98` (la colonne peut rester).
