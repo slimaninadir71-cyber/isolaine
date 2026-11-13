@@ -100,8 +100,10 @@ export async function sendCampaign(p: Prospect, c: Campaign): Promise<SendResult
   try {
     if (!c.active || !eligible(p, c)) return "ignoré";
     const claim = await claimSend(p.id, c.id);
+    // Clé anti-doublon propre à iso-laine.com : le compte Resend est partagé avec Destocklaine,
+    // dont les clés « isolaine-<campagne>-<prospect>-<essai> » bloquaient nos envois pendant 24 h (erreur 409).
     if (!claim) return "déjà envoyé";
-    const r = await resendSend(p.email, buildEmail(p, c), { idem: `isolaine-${c.id}-${p.id}-${claim.attempts}`, unsubscribe: isCommercial(c) ? `${SITE.url}/api/desinscription?t=${p.token}` : undefined });
+    const r = await resendSend(p.email, buildEmail(p, c), { idem: `iso-laine.com-campagne-${c.id}-prospect-${p.id}-essai-${claim.attempts}`, unsubscribe: isCommercial(c) ? `${SITE.url}/api/desinscription?t=${p.token}` : undefined });
     await closeSend(claim.id, r.ok, r.ok ? r.id : r.error, claim.attempts + 1);
     if (!r.ok) console.error("campagne", c.key, r.error);
     return r.ok ? "envoyé" : "échec";
