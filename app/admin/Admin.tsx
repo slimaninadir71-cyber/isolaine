@@ -21,7 +21,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
 
 export function Admin() {
   const [auth, setAuth] = useState<"wait" | "off" | "login" | "ok">("wait");
-  const [tab, setTab] = useState<"vue" | "prospects" | "emails" | "reglages">("vue");
+  const [tab, setTab] = useState<"vue" | "clients" | "prospects" | "emails" | "reglages">("vue");
   const [data, setData] = useState<{ stats: Stats; campaigns: Campaign[]; promo: Promo[] } | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const say = (text: string, ok = true) => setMsg({ ok, text });
@@ -36,10 +36,11 @@ export function Admin() {
   return (
     <>
       <div className="adm-top"><h1>Marketing &amp; Newsletter</h1><button type="button" className="btn btn-ghost btn-sm" onClick={async () => { await fetch("/api/admin/session", { method: "DELETE" }); setAuth("login"); }}>Se déconnecter</button></div>
-      <div className="adm-tabs" role="tablist">{([["vue", "Vue d'ensemble"], ["prospects", "Prospects"], ["emails", "E-mails"], ["reglages", "Réglages"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{l}</button>)}</div>
+      <div className="adm-tabs" role="tablist">{([["vue", "Vue d'ensemble"], ["clients", "Clients"], ["prospects", "Prospects"], ["emails", "E-mails"], ["reglages", "Réglages"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{l}</button>)}</div>
       {msg && <p className={msg.ok ? "adm-ok" : "form-err"} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       {!data ? <p className="muted" role="status">Chargement des données…</p>
         : tab === "vue" ? <Overview s={data.stats} />
+        : tab === "clients" ? <Clients run={run} say={say} />
         : tab === "prospects" ? <Prospects campaigns={data.campaigns} run={run} say={say} />
         : tab === "emails" ? <Emails campaigns={data.campaigns} stats={data.stats} run={run} say={say} />
         : <Settings promo={data.promo} run={run} say={say} />}
@@ -179,6 +180,65 @@ function Editor({ c, onClose, run, say }: { c: Campaign | null; onClose: () => v
         <div><p className="muted adm-note">Aperçu (avec des liens d'exemple)</p>{html ? <iframe title="Aperçu de l'e-mail" className="adm-frame" sandbox="" srcDoc={html} /> : <div className="adm-frame adm-empty">Cliquez sur « Prévisualiser ».</div>}</div>
       </div>
     </div>
+  );
+}
+
+type Req = { id: string; created_at: string; kind: string; name: string; email: string; phone: string | null; product: string | null; message: string | null; status: string };
+type Ord = { reference: string; created_at: string; customer_name: string; email: string; total: number; payment_method: string; payment_status: string; status: string };
+type Draft = { to: string; subject: string; message: string; reference?: string; requestId?: string; about: string };
+
+/** Clients : demandes reçues et commandes, avec un formulaire pour leur écrire directement (le client répond dans la boîte de l'équipe). */
+function Clients({ run, say }: { run: Run; say: Say }) {
+  const [d, setD] = useState<{ requests: Req[]; orders: Ord[] } | null>(null);
+  const [draft, setDraft] = useState<Draft>({ to: "", subject: "", message: "", about: "" });
+  const [sure, setSure] = useState(false); const [busy, setBusy] = useState(false);
+  const load = useCallback(async () => { try { setD(await api("/api/admin/data?view=clients")); } catch (e) { say((e as Error).message, false); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
+  const first = (n: string) => n.trim().split(/\s+/)[0] || "";
+  const pick = (x: Draft) => { setDraft(x); setSure(false); document.getElementById("adm-write")?.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const reply = (r: Req) => pick({ to: r.email, subject: r.kind === "devis" ? "Votre demande de devis – Isolaine" : "Réponse à votre message – Isolaine", message: `Bonjour ${first(r.name)},\n\nMerci pour votre message.\n\n`, requestId: r.id, about: `Réponse à ${r.name}` });
+  const write = (o: Ord) => pick({ to: o.email, subject: `Votre commande ${o.reference} – Isolaine`, message: `Bonjour ${first(o.customer_name)},\n\n`, reference: o.reference, about: `Commande ${o.reference} (${o.customer_name})` });
+  const send = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!sure) { setSure(true); return; }
+    setBusy(true);
+    const r = await run({ action: "writeClient", to: draft.to, subject: draft.subject, message: draft.message, reference: draft.reference ?? "", requestId: draft.requestId ?? "" }, `Message envoyé à ${draft.to}. Une copie est arrivée dans votre boîte ; la réponse du client y arrivera aussi.`);
+    setBusy(false); setSure(false);
+    if (r) { setDraft({ to: "", subject: "", message: "", about: "" }); load(); }
+  };
+  const PAY: Record<string, string> = { "payé": "Payée", "en attente": "Paiement en attente", aucun: "Sur confirmation", "refusé ou annulé": "Paiement refusé", "montant à vérifier": "Montant à vérifier", "erreur de paiement à vérifier": "Paiement à vérifier" };
+  return (
+    <>
+      <section id="adm-write" className="adm-box" style={{ maxWidth: 720 }}>
+        <h2 style={{ margin: 0 }}>Écrire à un client</h2>
+        <p className="muted adm-note" style={{ margin: 0 }}>{draft.about ? <>Au sujet de : <b>{draft.about}</b>. </> : null}Le message part de {"<"}commandes@iso-laine.com{">"} aux couleurs d'Isolaine. Si le client répond, sa réponse arrive directement dans votre boîte e-mail, avec une copie de votre message.</p>
+        <form className="form" onSubmit={send} style={{ display: "grid", gap: 10 }}>
+          <label>Adresse du client<input type="email" required value={draft.to} onChange={(e) => { setDraft({ ...draft, to: e.target.value }); setSure(false); }} placeholder="client@exemple.fr" /></label>
+          <label>Objet<input required maxLength={150} value={draft.subject} onChange={(e) => { setDraft({ ...draft, subject: e.target.value }); setSure(false); }} /></label>
+          <label>Message<textarea required rows={10} value={draft.message} onChange={(e) => { setDraft({ ...draft, message: e.target.value }); setSure(false); }} placeholder={"Bonjour,\n\n…"} /></label>
+          <p className="muted adm-note" style={{ margin: 0 }}>Laissez une ligne vide entre deux paragraphes. La signature « L'équipe ISO-LAINE » et le numéro WhatsApp sont ajoutés automatiquement.</p>
+          <div className="adm-actions">
+            <button className="btn btn-primary" disabled={busy}>{busy ? "Envoi…" : sure ? `Confirmer l'envoi à ${draft.to}` : "Envoyer"}</button>
+            {sure && <button type="button" className="btn btn-ghost" onClick={() => setSure(false)}>Annuler</button>}
+          </div>
+        </form>
+      </section>
+
+      <h2>Messages reçus</h2>
+      {!d ? <p className="muted" role="status">Chargement…</p> : d.requests.length === 0 ? <p className="muted">Aucun message pour l'instant.</p> : (
+        <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Date</th><th>Client</th><th>Message</th><th>État</th><th><span className="sr-only">Action</span></th></tr></thead><tbody>
+          {d.requests.map((r) => <tr key={r.id}><td>{dt(r.created_at)}</td><td><b>{r.name}</b><br />{r.email}{r.phone ? <><br />{r.phone}</> : null}</td><td style={{ whiteSpace: "pre-line", minWidth: 260 }}>{r.kind === "devis" ? <b>Devis{r.product ? ` : ${r.product}` : ""}<br /></b> : null}{r.message}</td><td>{r.status === "répondue" ? "Répondu" : "À traiter"}</td><td><button type="button" className="btn btn-ghost btn-sm" onClick={() => reply(r)}>Répondre</button></td></tr>)}
+        </tbody></table></div>
+      )}
+
+      <h2>Commandes</h2>
+      {!d ? null : d.orders.length === 0 ? <p className="muted">Aucune commande pour l'instant.</p> : (
+        <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Date</th><th>Commande</th><th>Client</th><th>Total</th><th>Paiement</th><th><span className="sr-only">Action</span></th></tr></thead><tbody>
+          {d.orders.map((o) => <tr key={o.reference}><td>{dt(o.created_at)}</td><td>{o.reference}</td><td><b>{o.customer_name}</b><br />{o.email}</td><td>{eur(o.total)}</td><td>{PAY[o.payment_status] ?? o.payment_status}</td><td><button type="button" className="btn btn-ghost btn-sm" onClick={() => write(o)}>Écrire</button></td></tr>)}
+        </tbody></table></div>
+      )}
+      <p className="muted adm-note">Les commandes passées avant le 12 novembre 2026 (ancienne base) n'apparaissent pas ici : saisissez l'adresse du client à la main dans le formulaire.</p>
+    </>
   );
 }
 

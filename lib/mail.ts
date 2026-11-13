@@ -108,3 +108,27 @@ ${bill ? `<h2 style="margin:20px 0 6px;font-size:18px;color:#173D32">Adresse de 
     return true;
   } catch (e) { console.error("mail client", (e as Error).message); return false; }
 }
+
+/**
+ * Message écrit à la main depuis l'administration (réponse à une demande, suivi d'une commande).
+ * Habillage Isolaine, réponse du client dirigée vers la boîte de l'équipe, copie cachée à l'équipe.
+ */
+export async function sendClientMessage(m: { to: string; subject: string; message: string; why: string }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const key = process.env.RESEND_API_KEY, team = process.env.ORDER_EMAIL_TO;
+  if (!key || !team) return { ok: false, error: "Les e-mails ne sont pas configurés (RESEND_API_KEY, ORDER_EMAIL_TO)." };
+  const from = process.env.ORDER_EMAIL_FROM || "Isolaine <commandes@iso-laine.com>";
+  const teamList = team.split(",").map((s) => s.trim()).filter(Boolean);
+  const blocks = m.message.replace(/\r/g, "").split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  const body = { html: blocks.map((b) => `<p style="margin:0 0 14px">${b.split("\n").map(esc).join("<br>")}</p>`).join(""), text: blocks.join("\n\n") };
+  const mail = layout(m.subject, body, { commercial: false, unsubscribe: "", why: m.why });
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [m.to], bcc: teamList, reply_to: teamList[0], subject: m.subject, html: mail.html, text: mail.text }),
+      cache: "no-store",
+    });
+    if (!res.ok) { const e = (await res.text().catch(() => "")).slice(0, 200); console.error("mail message client", res.status, e); return { ok: false, error: `Resend ${res.status}` }; }
+    return { ok: true };
+  } catch (e) { console.error("mail message client", (e as Error).message); return { ok: false, error: (e as Error).message }; }
+}

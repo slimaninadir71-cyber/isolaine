@@ -47,6 +47,13 @@ export async function GET(req: Request) {
       const total = Number((res.headers.get("content-range") || "").split("/")[1]);
       return NextResponse.json({ rows, total: Number.isFinite(total) ? total : page * SIZE + rows.length, size: SIZE }, { headers: noStore });
     }
+    if (view === "clients") { // dernières demandes (contact, devis) et dernières commandes, pour y répondre
+      const [requests, orders] = await Promise.all([
+        sbRows("requests?select=id,created_at,kind,name,email,phone,product,message,status&order=created_at.desc&limit=40"),
+        sbRows("orders?select=reference,created_at,customer_name,email,total,payment_method,payment_status,status&order=created_at.desc&limit=40"),
+      ]);
+      return NextResponse.json({ requests, orders }, { headers: noStore });
+    }
     if (view === "history") return NextResponse.json({ events: await sbRows(`email_events?prospect_id=eq.${id(u)}&select=id,campaign_id,event_type,status,attempts,sent_at,error_message,created_at&order=created_at.desc&limit=200`) }, { headers: noStore });
     if (view === "export") { // droit d'accès : toutes les données conservées sur une personne
       const prospect = (await sbRows<Record<string, unknown>>(`prospects?id=eq.${id(u)}&select=${COLS}&limit=1`))[0];

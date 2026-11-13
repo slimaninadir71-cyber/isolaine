@@ -3,6 +3,8 @@ import { isAdminWrite } from "@/lib/admin-auth";
 import { clean, isEmail } from "@/lib/supabase-rest";
 import { listCampaigns, sb, updateCampaign, updateProspect } from "@/lib/supabase-admin";
 import { buildEmail, resendSend } from "@/lib/emailing";
+import { sendClientMessage } from "@/lib/mail";
+import { SITE } from "@/lib/site";
 import { runAll, sendNewsletter } from "@/lib/marketing";
 import { normCode } from "@/lib/promo";
 
@@ -24,6 +26,18 @@ export async function POST(req: Request) {
   try {
     const camp = async () => (await listCampaigns()).find((c) => c.id === num(b.id));
     switch (b.action) {
+      case "writeClient": { // message écrit à la main ; le client répond directement à la boîte de l'équipe
+        const to = clean(b.to, 200).toLowerCase(), subject = clean(b.subject, 150), message = text(b.message);
+        const ref = clean(b.reference, 40), reqId = typeof b.requestId === "string" && /^[0-9a-f-]{36}$/.test(b.requestId) ? b.requestId : "";
+        if (!isEmail(to)) return bad("Indiquez l'adresse e-mail du client.");
+        if (subject.length < 3) return bad("Indiquez l'objet du message.");
+        if (message.length < 5) return bad("Le message est vide.");
+        const why = ref ? `Vous recevez cet e-mail au sujet de votre commande ${ref} sur ${SITE.domain}.` : `Vous recevez cet e-mail en réponse à votre message envoyé sur ${SITE.domain}.`;
+        const r = await sendClientMessage({ to, subject, message, why });
+        if (!r.ok) return bad(`Le message n'est pas parti : ${r.error}`, 502);
+        if (reqId) await sb(`requests?id=eq.${reqId}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "répondue" }) });
+        return ok();
+      }
       case "runNow": return ok(await runAll(40000));
       case "saveCampaign": {
         const c = await camp(), subject = clean(b.subject, 150), content = text(b.content);
