@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAdminWrite } from "@/lib/admin-auth";
 import { clean, isEmail } from "@/lib/supabase-rest";
-import { listCampaigns, sb, updateCampaign, updateProspect } from "@/lib/supabase-admin";
+import { getOrder, listCampaigns, recordCustomerMail, sb, updateCampaign, updateProspect } from "@/lib/supabase-admin";
 import { buildEmail, resendSend } from "@/lib/emailing";
-import { sendClientMessage } from "@/lib/mail";
+import { notifyCustomer, sendClientMessage } from "@/lib/mail";
 import { SITE } from "@/lib/site";
 import { runAll, sendNewsletter } from "@/lib/marketing";
 import { normCode } from "@/lib/promo";
@@ -37,6 +37,15 @@ export async function POST(req: Request) {
         if (!r.ok) return bad(`Le message n'est pas parti : ${r.error}`, 502);
         if (reqId) await sb(`requests?id=eq.${reqId}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "répondue" }) });
         return ok();
+      }
+      case "resendConfirmation": { // renvoie au client le récapitulatif de sa commande payée
+        const ref = clean(b.reference, 40);
+        const order = ref ? await getOrder(ref) : null;
+        if (!order) return bad("Commande introuvable.", 404);
+        if (order.payment_status !== "payé") return bad("Cette commande n'est pas payée : la confirmation ne part qu'après le paiement.");
+        const sent = await notifyCustomer(order);
+        await recordCustomerMail(ref, sent);
+        return sent ? ok() : bad("La confirmation n'est pas partie. Réessayez dans un instant.", 502);
       }
       case "runNow": return ok(await runAll(40000));
       case "saveCampaign": {

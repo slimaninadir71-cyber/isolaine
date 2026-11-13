@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { classify, verifyWebhook } from "@/lib/cawl";
-import { adminConfigured, markPaid, getOrder, setPayment } from "@/lib/supabase-admin";
+import { adminConfigured, markPaid, getOrder, setPayment, recordCustomerMail } from "@/lib/supabase-admin";
 import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
 
 export const runtime = "nodejs";
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             ...billingLine(order), ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
           ], order.email);
           await markPaid(order);
-          await notifyCustomer(order);
+          await recordCustomerMail(ref, await notifyCustomer(order));
         }
       } else if (kind === "failed" && order.payment_status !== "payé") {
         await setPayment(ref, { payment_status: "refusé ou annulé", payment_id: pay.id ?? null });

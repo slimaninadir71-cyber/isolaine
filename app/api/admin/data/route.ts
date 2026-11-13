@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     if (view === "clients") { // dernières demandes (contact, devis) et dernières commandes, pour y répondre
       const [requests, orders] = await Promise.all([
         sbRows("requests?select=id,created_at,kind,name,email,phone,product,message,status&order=created_at.desc&limit=40"),
-        sbRows("orders?select=reference,created_at,customer_name,email,total,payment_method,payment_status,status&order=created_at.desc&limit=40"),
+        sbRows("orders?select=reference,created_at,customer_name,email,total,payment_method,payment_status,status,customer_mail_at,customer_mail_error&order=created_at.desc&limit=40"),
       ]);
       return NextResponse.json({ requests, orders }, { headers: noStore });
     }

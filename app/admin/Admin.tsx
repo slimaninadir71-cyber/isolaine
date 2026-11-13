@@ -184,7 +184,7 @@ function Editor({ c, onClose, run, say }: { c: Campaign | null; onClose: () => v
 }
 
 type Req = { id: string; created_at: string; kind: string; name: string; email: string; phone: string | null; product: string | null; message: string | null; status: string };
-type Ord = { reference: string; created_at: string; customer_name: string; email: string; total: number; payment_method: string; payment_status: string; status: string };
+type Ord = { reference: string; created_at: string; customer_name: string; email: string; total: number; payment_method: string; payment_status: string; status: string; customer_mail_at: string | null; customer_mail_error: string | null };
 type Draft = { to: string; subject: string; message: string; reference?: string; requestId?: string; about: string };
 
 /** Clients : demandes reçues et commandes, avec un formulaire pour leur écrire directement (le client répond dans la boîte de l'équipe). */
@@ -205,6 +205,12 @@ function Clients({ run, say }: { run: Run; say: Say }) {
     const r = await run({ action: "writeClient", to: draft.to, subject: draft.subject, message: draft.message, reference: draft.reference ?? "", requestId: draft.requestId ?? "" }, `Message envoyé à ${draft.to}. Une copie est arrivée dans votre boîte ; la réponse du client y arrivera aussi.`);
     setBusy(false); setSure(false);
     if (r) { setDraft({ to: "", subject: "", message: "", about: "" }); load(); }
+  };
+  const resend = async (o: Ord) => {
+    if (!window.confirm(`Envoyer à ${o.email} le récapitulatif de la commande ${o.reference} ?`)) return;
+    setBusy(true);
+    await run({ action: "resendConfirmation", reference: o.reference }, `Confirmation de la commande ${o.reference} envoyée à ${o.email}.`);
+    setBusy(false); load();
   };
   const PAY: Record<string, string> = { "payé": "Payée", "en attente": "Paiement en attente", aucun: "Sur confirmation", "refusé ou annulé": "Paiement refusé", "montant à vérifier": "Montant à vérifier", "erreur de paiement à vérifier": "Paiement à vérifier" };
   return (
@@ -233,10 +239,11 @@ function Clients({ run, say }: { run: Run; say: Say }) {
 
       <h2>Commandes</h2>
       {!d ? null : d.orders.length === 0 ? <p className="muted">Aucune commande pour l'instant.</p> : (
-        <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Date</th><th>Commande</th><th>Client</th><th>Total</th><th>Paiement</th><th><span className="sr-only">Action</span></th></tr></thead><tbody>
-          {d.orders.map((o) => <tr key={o.reference}><td>{dt(o.created_at)}</td><td>{o.reference}</td><td><b>{o.customer_name}</b><br />{o.email}</td><td>{eur(o.total)}</td><td>{PAY[o.payment_status] ?? o.payment_status}</td><td><button type="button" className="btn btn-ghost btn-sm" onClick={() => write(o)}>Écrire</button></td></tr>)}
+        <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Date</th><th>Commande</th><th>Client</th><th>Total</th><th>Paiement</th><th>Confirmation client</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>
+          {d.orders.map((o) => <tr key={o.reference}><td>{dt(o.created_at)}</td><td>{o.reference}</td><td><b>{o.customer_name}</b><br />{o.email}</td><td>{eur(o.total)}</td><td>{PAY[o.payment_status] ?? o.payment_status}</td><td>{o.payment_status !== "payé" ? <span className="muted">–</span> : o.customer_mail_at ? <>Envoyée<br /><small className="muted">{dt(o.customer_mail_at)}</small></> : <b style={{ color: "var(--red)" }}>{o.customer_mail_error ? "Échec de l'envoi" : "Non envoyée"}</b>}</td><td><div style={{ display: "grid", gap: 6 }}>{o.payment_status === "payé" && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => resend(o)}>{o.customer_mail_at ? "Renvoyer la confirmation" : "Envoyer la confirmation"}</button>}<button type="button" className="btn btn-ghost btn-sm" onClick={() => write(o)}>Écrire</button></div></td></tr>)}
         </tbody></table></div>
       )}
+      <p className="muted adm-note">« Confirmation client » : récapitulatif envoyé au client après son paiement (suivi depuis le 13 novembre 2026).</p>
       <p className="muted adm-note">Les commandes passées avant le 12 novembre 2026 (ancienne base) n'apparaissent pas ici : saisissez l'adresse du client à la main dans le formulaire.</p>
     </>
   );

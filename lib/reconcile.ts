@@ -1,5 +1,5 @@
 // Rapprochement d'un paiement : met à jour la commande et prévient l'équipe. Sans danger si appelé plusieurs fois (webhook et retour client).
-import { adminConfigured, markPaid, getOrder, setPayment } from "@/lib/supabase-admin";
+import { adminConfigured, markPaid, getOrder, setPayment, recordCustomerMail } from "@/lib/supabase-admin";
 import { classify } from "@/lib/cawl";
 import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
 
@@ -25,7 +25,7 @@ export async function reconcilePayment(reference: string, pay: PaymentFacts, opt
       ...billingLine(order), ["Articles", itemsText(order.items)], ...promoLine(order), ["Total payé", `${Number(order.total).toFixed(2)} € (livraison offerte)`],
     ], order.email);
     await markPaid(order);
-    await notifyCustomer(order);
+    await recordCustomerMail(reference, await notifyCustomer(order));
   } else if ((kind === "failed" || (opts.final && kind !== "paid")) && order.payment_status !== "payé" && order.payment_status !== "refusé ou annulé") {
     await setPayment(reference, { payment_status: "refusé ou annulé", payment_id: pay.id || null });
   }

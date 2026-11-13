@@ -19,6 +19,11 @@ export type OrderRow = { billing?: import("./types").Billing | null; reference: 
 export async function getOrder(reference: string): Promise<OrderRow | null> {
   return (await rows<OrderRow>(`orders?reference=eq.${q(reference)}&select=reference,total,payment_status,payment_method,payment_id,customer_name,email,phone,delivery_mode,address,postal_code,city,country,billing,discount,promo_code,items&limit=1`))[0] ?? null;
 }
+/** Trace de la confirmation envoyée au client (date si partie, sinon motif). Ne lève jamais d'erreur. */
+export async function recordCustomerMail(reference: string, sent: boolean) {
+  try { await patch(`orders?reference=eq.${q(reference)}`, sent ? { customer_mail_at: new Date().toISOString(), customer_mail_error: null } : { customer_mail_error: "Envoi refusé ou en échec (voir journaux Vercel)" }); }
+  catch (e) { console.error("trace confirmation", (e as Error).message); }
+}
 export async function setPayment(reference: string, fields: Record<string, unknown>) {
   await patch(`orders?reference=eq.${q(reference)}`, fields);
 }
