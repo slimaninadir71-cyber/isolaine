@@ -61,8 +61,8 @@ export default function Home() {
           )}
           <div className="v-hero-txt">
             <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
-            <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
-            <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
+            <h1>Isoler, chauffer, équiper.<span>Au juste prix.</span></h1>
+            <p className="v-hero-sub">Isolants, bois de chauffage, matériel de pose et outillage pour vos combles, murs et chantiers. Livraison offerte en France et en Belgique.</p>
             <nav className="v-hero-ray" aria-label="Nos rayons">
               {RAYONS.map((r) => {
                 const img = rayonPicks(r).find((p) => p.image)?.image;
@@ -74,12 +74,6 @@ export default function Home() {
                 );
               })}
             </nav>
-            {(pal != null || roll != null) && (
-              <div className="v-hero-from num">
-                {pal != null && <div><b>{eur(pal)}/m²</b>laine de verre à la palette</div>}
-                {roll != null && <div><b>{eur(roll)}/m²</b>rouleau à l'unité</div>}
-              </div>
-            )}
           </div>
         </div>
       </section>
