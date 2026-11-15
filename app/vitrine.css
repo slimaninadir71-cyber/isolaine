@@ -473,3 +473,7 @@ a { color: var(--g7); }
 .rnav-i > a { white-space: nowrap; }
 @media (max-width: 1180px) { .rnav-i > a { padding: 0 10px; font-size: 14px; gap: 4px; } }
 @media (max-width: 960px) { .rnav-i > a { padding: 0 7px; font-size: 13px; } .rnav-i > a svg { display: none; } }
+/* Le fond chaud doit passer devant l'alternance blanc / gris des sections .ray */
+.ray.ray-feu:nth-child(n of .ray) { background: linear-gradient(135deg, #2A1D12 0%, #173D32 100%); border-top: 0; border-bottom: 4px solid #E8A33D; }
+.ray.ray-feu:nth-child(n of .ray) .ray-subs a { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .25); color: #fff; }
+.ray.ray-feu:nth-child(n of .ray) .ray-subs a:hover { border-color: #F2B65A; color: #F2B65A; }
