@@ -68,7 +68,7 @@ export default function Home() {
             </picture>
           )}
           <div className="v-hero-txt">
-            <p className="kicker">−{PROMO_PCT} % sur l'isolation et le matériel</p>
+            <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
             <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
             <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
             <div className="v-hero-cta">

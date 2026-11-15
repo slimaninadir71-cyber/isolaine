@@ -86,8 +86,8 @@ const round2 = (x) => Math.round(x * 100) / 100;
 // Promotion : −20 % sur tout le catalogue. Le prix affiché ET le prix facturé sont les prix réduits (la commande lit ce catalogue) ; « was » garde le prix d'origine.
 const PROMO_PCT = 20;
 const disc = (x) => Math.round(Math.round(x * 100) * (100 - PROMO_PCT) / 100) / 100;
-// Familles vendues au prix de base, hors promotion −20 % (prix affiché = prix facturé, pas de prix barré)
-const NO_PROMO = new Set(["chauffage-bois"]);
+// Familles vendues au prix de base, hors promotion −20 % (aucune pour l'instant : le chauffage bois est aussi remisé)
+const NO_PROMO = new Set([]);
 function lvUse(name) {
   if (/souffl/i.test(name)) return "souffler";
   if (/\bGR\s?32\b/i.test(name)) return "murs";
