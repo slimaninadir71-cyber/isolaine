@@ -1,17 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getProduct } from "@/lib/catalog";
+import { getDetail, getProduct } from "@/lib/catalog";
 import { USES, lv, lvOf, minPpm2 } from "@/lib/laine";
-import { RAYONS, rayonByKey, rayonLinks, rayonPicks, rayonProducts } from "@/lib/rayons";
-import { eur, num } from "@/lib/format";
+import { RAYONS, rayonByKey, rayonPicks, rayonProducts } from "@/lib/rayons";
+import { eur } from "@/lib/format";
 import { COMPANY, SITE } from "@/lib/site";
 import type { Card } from "@/lib/types";
 import heroData from "@/lib/data/hero.json";
 import { JsonLd } from "@/components/Breadcrumbs";
-import { Shelf, ShelfArrows } from "@/components/Shelf";
+import { ProductCard } from "@/components/ProductCard";
+import { Logo } from "@/components/Logo";
+import { CONTACT } from "@/lib/contact";
 import { SurfaceCalc } from "@/components/SurfaceCalc";
 import { PROMO_PCT } from "@/components/Promo";
-import { IconChevron } from "@/components/Icons";
+import { IconCheck, IconChevron, IconHeadset, IconShield, IconTruck } from "@/components/Icons";
 
 type Hero = { w: number; h: number; h800?: number; src: string; avif: string; webp: string; og: string };
 const hero = heroData as unknown as Hero | null;
@@ -21,22 +23,33 @@ export const metadata: Metadata = {
   ...(hero?.og ? { openGraph: { images: [{ url: hero.og, width: 1200, height: 630, alt: "Rouleau de laine de verre dans des combles en cours d'isolation" }] } } : {}),
 };
 
-// « Complétez votre chantier » : isoler → fixer → poser (références du catalogue)
-const STEPS: { n: string; t: string; d: string; href: string; more: string; slugs: string[] }[] = [
-  { n: "1", t: "Isoler", d: "Rouleaux, panneaux ou laine à souffler.", href: "/isolation", more: "Tout l'isolant",
-    slugs: ["laine-de-verre-120mm-isover-gr-32-kraft-roule-324m2-r375", "laine-de-verre-280mm-isover-comble-ecolaine-336m2-r7", "comblissimo-isover"] },
-  { n: "2", t: "Fixer", d: "L'ossature du doublage et ses fixations.", href: "/fixation-ossature", more: "Fixation & ossature",
-    slugs: ["rail-pour-lisolation-interieure-iti-48mm-3ml", "montant-pour-lisolation-interieure-iti-48mm-3ml", "fourrure-pour-isolation-interieure-iti-45mm-3ml"] },
-  { n: "3", t: "Poser", d: "Étanchéité, découpe et finitions.", href: "/materiel-de-pose", more: "Matériel de pose",
-    slugs: ["pare-vapeur-pare-pluie-master-classic", "couteau-pour-laine-de-verre-28cm", "mousse-expansive-izo-mousse-pu-750-ml"] },
-];
-const short = (n: string) => n.replace(/\s+–\s+vendue? à la palette/i, "");
 
 export default function Home() {
   const pal = minPpm2(lv.filter((p) => p.cu === "palette"));
   const roll = minPpm2(lv.filter((p) => p.cu === "rouleau"));
   const rates = USES.map((u) => ({ key: u.key, label: u.title, href: `/laine-de-verre/${u.slug}`, ppm2: minPpm2(lvOf(u.key)) }));
-  const steps = STEPS.map((s) => ({ ...s, items: s.slugs.map(getProduct).filter((p): p is Card => !!p && p.price != null) }));
+
+  // Trois univers : photo d'un vrai produit du rayon, en grand format
+  const big = (slug?: string) => (slug ? getDetail(slug).images[0]?.src ?? getProduct(slug)?.image ?? "" : "");
+  const outil = rayonPicks(rayonByKey("outillage")).find((p) => p.image);
+  const UNIVERS = [
+    { k: "isolation" as const, title: "Isolation & laine de verre", text: "Confort thermique et économies d'énergie : rouleaux, panneaux et laine à souffler.", cta: "Voir la sélection",
+      img: big("laine-de-verre-120mm-isover-gr-32-kraft-roule-324m2-r375") },
+    { k: "chauffage" as const, title: "Bois de chauffage", text: "Granulés, bûches et bûches densifiées : chauffez-vous au bois au meilleur prix.", cta: "Voir les offres",
+      img: big("buches-feuillus-durs-33-cm-palette-2-9-steres") || big(rayonPicks(rayonByKey("chauffage"))[0]?.slug) },
+    { k: "outillage" as const, title: "Outillage professionnel", text: "Perceuses, scies, laser, malaxeur : les machines pour tous vos travaux.", cta: "Voir la gamme",
+      img: big(outil?.slug) },
+  ].map((u) => ({ ...u, r: rayonByKey(u.k) }));
+  const others = RAYONS.filter((r) => !UNIVERS.some((u) => u.k === r.key));
+
+  // Meilleures offres : vrais produits du catalogue, prix et remises réels
+  const palette = lv.filter((p) => p.cu === "palette" && p.ppm2 != null && p.image).sort((a, b) => (a.ppm2 as number) - (b.ppm2 as number))[0];
+  const offers = [
+    getProduct("laine-de-verre-120mm-isover-gr-32-kraft-roule-324m2-r375"),
+    palette,
+    outil,
+    getProduct("buches-feuillus-durs-33-cm-palette-2-9-steres") ?? rayonPicks(rayonByKey("chauffage"))[0],
+  ].filter((p, i, a): p is Card => !!p && p.price != null && a.findIndex((x) => x?.slug === p.slug) === i);
 
   return (
     <>
@@ -49,137 +62,74 @@ export default function Home() {
         ],
       }} />
 
-      {/* Bannière */}
-      <section className="v-hero">
-        <div className="v-hero-in">
+      {/* Bannière : isolation et laine de verre */}
+      <section className="hx" aria-labelledby="hx-h">
+        <div className="hx-in">
           {hero && (
-            <picture className="v-hero-img">
-              {hero.avif && <source type="image/avif" srcSet={hero.avif} sizes="(min-width: 761px) 58vw, 100vw" />}
-              {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="(min-width: 761px) 58vw, 100vw" />}
+            <picture className="hx-img">
+              {hero.avif && <source type="image/avif" srcSet={hero.avif} sizes="(min-width: 761px) 55vw, 100vw" />}
+              {hero.webp && <source type="image/webp" srcSet={hero.webp} sizes="(min-width: 761px) 55vw, 100vw" />}
               <img src={hero.src} alt="Rouleau de laine de verre déroulé dans des combles en cours d'isolation" width={hero.w} height={hero.h} fetchPriority="high" decoding="async" />
             </picture>
           )}
-          <div className="v-hero-txt">
-            <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
-            <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
-            <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
-            <div className="v-hero-cta">
-              <Link href="/isolation" className="btn btn-primary">Découvrir nos isolants <IconChevron size={18} /></Link>
-              <Link href="/contact?type=devis" className="btn btn-line">Demander un devis chantier</Link>
-            </div>
+          <div className="hx-txt">
+            <h1 id="hx-h">Isolation performante <span>à prix cassés !</span></h1>
+            <ul>
+              <li><IconCheck size={20} /><Link href="/laine-de-verre">Laine de verre</Link></li>
+              {USES.filter((u) => u.key !== "souffler").map((u) => <li key={u.key}><IconCheck size={20} /><Link href={`/laine-de-verre/${u.slug}`}>Isolation des {u.key === "combles" ? "combles" : "murs"}</Link></li>)}
+              <li><IconCheck size={20} /><Link href="/laine-de-verre/laine-a-souffler">Laine à souffler</Link></li>
+            </ul>
+            <Link href="/isolation" className="btn-or">Découvrir notre rayon <IconChevron size={18} /></Link>
             {(pal != null || roll != null) && (
-              <div className="v-hero-from num">
-                {pal != null && <div><b>{eur(pal)}/m²</b>laine de verre à la palette</div>}
-                {roll != null && <div><b>{eur(roll)}/m²</b>rouleau à l'unité</div>}
-              </div>
+              <p className="hx-from num">
+                {pal != null && <span>Dès <b>{eur(pal)}/m²</b> à la palette</span>}
+                {roll != null && <span>dès <b>{eur(roll)}/m²</b> au rouleau</span>}
+              </p>
             )}
           </div>
+          <p className="hx-tag" aria-label={`Moins ${PROMO_PCT} pour cent sur tout le catalogue`}><small>Sur tout le catalogue</small>−{PROMO_PCT} %</p>
         </div>
       </section>
 
-      {/* Avantages */}
-      <section className="adv" aria-label="Nos engagements">
+      {/* Trois univers */}
+      <section className="wrap ux" aria-label="Nos univers">
+        {UNIVERS.map((u) => (
+          <Link key={u.k} href={`/${u.r.slug}`} className={`ux-card ux-${u.k}`}>
+            <span className="ux-txt">
+              <b>{u.title}</b>
+              <span>{u.text}</span>
+              <span className="btn-or">{u.cta} <IconChevron size={16} /></span>
+            </span>
+            <span className="ux-img">{u.img && <img src={u.img} alt="" loading="lazy" decoding="async" />}</span>
+          </Link>
+        ))}
+      </section>
+      <nav className="wrap ux-more" aria-label="Autres rayons">
+        <span>Aussi :</span>
+        {others.map((r) => <Link key={r.key} href={`/${r.slug}`}>{r.title} <small className="num">({rayonProducts(r).length})</small></Link>)}
+        <Link href="/boutique">Tout le catalogue →</Link>
+      </nav>
+
+      {/* Meilleures offres (vrais produits, vrais prix) */}
+      <section className="wrap ox" aria-labelledby="ox-h">
+        <div className="ox-h">
+          <h2 id="ox-h">Nos meilleures offres</h2>
+          <Link href="/boutique" className="more-link">Voir tout le catalogue →</Link>
+        </div>
+        <div className="grid ox-grid">
+          {offers.map((p, i) => <ProductCard key={p.slug} p={p} priority={i < 2} />)}
+        </div>
+      </section>
+
+      {/* Réassurance */}
+      <section className="rx2" aria-label="Nos engagements">
         <div className="wrap"><ul>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11zM13.5 9.5h4.5l3.5 3.5v3h-8" /><circle cx="6.5" cy="17.5" r="1.8" /><circle cx="17.5" cy="17.5" r="1.8" /></svg>
-            <div><b>Livraison offerte</b><p>France métropolitaine et Belgique. {SITE.ship}.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M4 9.5h16M9.5 4v16" /></svg>
-            <div><b>Prix au m² affiché</b><p>Sur chaque rouleau et chaque palette de laine, pour comparer d'un coup d'œil.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
-            <div><b>À l'unité ou à la palette</b><p>Un rouleau pour un petit chantier, une palette complète pour un grand.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="8.5" cy="8" r="3" /><circle cx="16.5" cy="9" r="2.5" /><path d="M3 19c.8-3.4 3-5 5.5-5s4.7 1.6 5.5 5M14 14.5c2.6-.6 5.4.6 6.5 4.5" /></svg>
-            <div><b>Paiement sécurisé</b><p>Par carte bancaire, avec authentification 3-D Secure.</p></div></li>
+          <li><IconTruck size={34} /><div><b>Livraison offerte</b><p>France métropolitaine et Belgique · {SITE.ship.toLowerCase()}</p></div></li>
+          <li><IconShield size={34} /><div><b>Paiement sécurisé</b><p>Carte bancaire, authentification 3-D Secure</p></div></li>
+          <li><IconHeadset size={34} /><div><b>Conseils personnalisés</b><p>Sur WhatsApp au {CONTACT.whatsappDisplay} ou par e-mail</p></div></li>
+          <li><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
+            <div><b>À l'unité ou à la palette</b><p>Pour un petit chantier comme pour un grand</p></div></li>
         </ul></div>
-      </section>
-
-      {/* Nos rayons : une carte par rayon (photo, nombre de produits, catégories principales) */}
-      <section className="rx" aria-labelledby="rayons-h">
-        <div className="wrap">
-          <div className="rx-h">
-            <div>
-              <p className="eyebrow-v">Nos rayons</p>
-              <h2 id="rayons-h">Tout le catalogue en 6 rayons</h2>
-            </div>
-            <Link href="/boutique" className="more-link">Tout le catalogue →</Link>
-          </div>
-          <nav className="rx-grid" aria-label="Rayons de la boutique">
-            {RAYONS.map((r) => {
-              const img = rayonPicks(r).find((p) => p.image)?.image ?? "";
-              return (
-                <Link key={r.key} href={`/${r.slug}`} className={`rx-card${r.key === "chauffage" ? " is-new" : ""}`}>
-                  <span className="rx-img">{img && <img src={img} alt="" loading="lazy" decoding="async" />}{r.key === "chauffage" && <em>Nouveau</em>}</span>
-                  <span className="rx-t"><b>{r.title}</b><small>{r.short}</small><span className="rx-n num">{rayonProducts(r).length} produits →</span></span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </section>
-
-      {/* Deux sélections : les plus demandés en isolation, et le rayon Chauffage bois (spécial hiver) */}
-      {(["chauffage", "isolation"] as const).map((k) => {
-        const r = rayonByKey(k);
-        const picks = rayonPicks(r);
-        const labels = Object.fromEntries(picks.map((p) => [p.slug, r.picks.find((g) => g.subs.includes(p.sub))?.label ?? p.subName]));
-        const winter = k === "chauffage";
-        return (
-          <section key={k} className={`ray${winter ? " ray-feu" : ""}`} id={`r${r.n}`} aria-labelledby={`r${r.n}-h`}>
-            <div className="wrap">
-              <div className="ray-h">
-                <div className="ray-t">
-                  <div>
-                    {winter && <p className="kicker">Nouveau rayon · Spécial hiver</p>}
-                    <h2 id={`r${r.n}-h`}><Link href={`/${r.slug}`}>{winter ? "Chauffage bois" : "Les plus demandés en isolation"}</Link></h2>
-                    <p>{winter ? "Granulés en palette, bûches de chêne, hêtre et charme, bûches densifiées et poêles à granulés : faites votre stock pour l'hiver, livré chez vous." : r.desc}</p>
-                  </div>
-                </div>
-                <div className="ray-act">
-                  <Link href={`/${r.slug}`} className="more-link">Tout le rayon <span className="num">({rayonProducts(r).length})</span></Link>
-                  <ShelfArrows target={`car-${r.key}`} />
-                </div>
-              </div>
-              <nav className="ray-subs" aria-label={`Catégories ${r.title}`}>
-                {rayonLinks(r).map((l) => <Link key={l.href} href={l.href}>{l.name}</Link>)}
-              </nav>
-              <Shelf id={`car-${r.key}`} items={picks} label={`Produits phares : ${r.title}`} labels={labels} />
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Complétez votre chantier */}
-      <section className="chantier" aria-labelledby="chantier-h">
-        <div className="wrap">
-          <div className="sec-h">
-            <p className="eyebrow-v">Complétez votre chantier</p>
-            <h2 id="chantier-h">Isoler, fixer, poser : tout dans le même panier</h2>
-            <p>Pour un doublage de mur ou des combles, voici ce qui va avec l'isolant.</p>
-          </div>
-          <div className="steps3">
-            {steps.map((s) => (
-              <div key={s.n} className="step3">
-                <div className="step3-h">
-                  <span className="step3-n">{s.n}</span><h3>{s.t}</h3>
-                  {s.n !== "3" && <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>}
-                </div>
-                <p>{s.d}</p>
-                {s.items.map((p) => {
-                  const from = p.variable && p.priceMax != null && p.priceMax > (p.price as number);
-                  return (
-                    <div key={p.slug} className="mini">
-                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" /> : <span />}
-                      <div>
-                        <Link href={`/produit/${p.slug}`}>{short(p.name)}</Link>
-                        <span>{p.ppm2 != null ? `${p.r ? `R = ${num(p.r)} · ` : ""}${eur(p.ppm2)}/m²` : p.pack || (from ? "Plusieurs options" : "À l'unité")}</span>
-                      </div>
-                      <div className="p num">{from ? "dès " : ""}{eur(p.price as number)}</div>
-                    </div>
-                  );
-                })}
-                <Link href={s.href} className="more-link">{s.more} →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* Calculateur de surface (existant) */}
@@ -198,12 +148,8 @@ export default function Home() {
             <ul><li>Particuliers et professionnels</li><li>Commande à la palette ou en plusieurs palettes</li><li>Réponse par e-mail</li></ul>
           </div>
           <div className="tools-r">
-            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5" /><path d="M8 7h8M8 11h2M12 11h1M15 11h1M8 14.5h2M12 14.5h1M15 14.5h1M8 18h2M12 18h4" /></svg>
-              <div><b>Calculateur de surface</b><p>Ci-dessus et sur chaque fiche d'isolant : indiquez vos m², il donne le nombre de rouleaux ou de palettes.</p><Link href="/laine-de-verre">Choisir un isolant →</Link></div></div>
             <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
               <div><b>Achat à la palette</b><p>Toutes les palettes de laine de verre triées par prix au m².</p><Link href="/laine-de-verre?vente=palette&tri=m2">Voir les palettes →</Link></div></div>
-            <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" /></svg>
-              <div><b>Accès rapide</b><p>Combles, murs, laine à souffler, rails, pare-vapeur : tous les rayons en un clic.</p><Link href="/boutique">Tout le catalogue →</Link></div></div>
             <div className="tool"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 5h16v11H8l-4 3.5z" /><path d="M8 9.5h8M8 12.5h5" /></svg>
               <div><b>Contact commercial</b><p>Une question sur un produit, une livraison ou une commande en cours.</p><Link href="/contact">Nous écrire →</Link></div></div>
           </div>
@@ -224,6 +170,15 @@ export default function Home() {
           au RCS de {COMPANY.rcs.replace(/^RCS /, "").replace(/ \d.*$/, "")} (SIREN {COMPANY.siren}), {COMPANY.address.replace(/, France$/, "")}. Rétractation de 14 jours pour les particuliers, garantie légale de conformité de 2 ans.</p>
       </section>
 
+
+      {/* Bandeau de marque */}
+      <section className="bx" aria-label="Isolaine">
+        <div className="wrap bx-in">
+          <span className="bx-logo"><Logo light /></span>
+          <p>Votre partenaire matériaux <span>au meilleur prix !</span></p>
+          <Link href="/boutique" className="btn-or">Découvrir tous nos produits <IconChevron size={18} /></Link>
+        </div>
+      </section>
     </>
   );
 }

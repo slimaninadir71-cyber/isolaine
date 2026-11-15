@@ -8,7 +8,8 @@ import { SITE } from "@/lib/site";
 import { LV_USES } from "@/lib/lv-labels";
 import { Logo } from "./Logo";
 import { SearchBox } from "./SearchBox";
-import { IconCart, IconChat, IconCheck, IconChevron, IconChevronDown, IconClock, IconClose, IconMenu, IconQuote, IconSearch, IconTruck } from "./Icons";
+import { CONTACT } from "@/lib/contact";
+import { IconCart, IconChevron, IconChevronDown, IconClose, IconFlame, IconHeadset, IconHome, IconLock, IconMenu, IconSearch, IconTruck, IconWhatsApp } from "./Icons";
 
 /**
  * En-tête : bandeau d'engagements réels, logo, recherche, contact / devis / panier,
@@ -45,14 +46,11 @@ export default function Header({ rayons }: { families: NavFamily[]; rayons: NavR
       <div className="util">
         <div className="wrap util-in">
           <ul>
-            <li><IconTruck size={16} /> {SITE.delivery}</li>
-            <li><IconClock size={16} /> {SITE.ship}</li>
-            <li><IconCheck size={16} /> Paiement sécurisé par carte, 3-D Secure</li>
+            <li><IconTruck size={18} /> {SITE.delivery}</li>
+            <li><IconLock size={16} /> Paiement sécurisé</li>
+            <li><Link href="/contact?type=devis"><IconHeadset size={17} /> Conseils &amp; devis</Link></li>
           </ul>
-          <ul>
-            <li><Link href="/contact">Aide et contact</Link></li>
-            <li><Link href="/contact?type=devis">Devis professionnels</Link></li>
-          </ul>
+          <a className="util-wa" href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noopener noreferrer"><IconWhatsApp size={17} /> WhatsApp</a>
         </div>
       </div>
       <header className="hdr">
@@ -60,14 +58,19 @@ export default function Header({ rayons }: { families: NavFamily[]; rayons: NavR
           <button type="button" className="hdr-burger" aria-label="Ouvrir le menu" aria-expanded={drawer} aria-controls="menu-mobile" onClick={() => setDrawer(true)}>
             <IconMenu size={24} />
           </button>
-          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil"><Logo light /></Link>
+          <Link href="/" className="hdr-logo" aria-label="Isolaine, retour à l'accueil">
+            <Logo />
+            <span className="hdr-tag">Isolation · Bois de chauffage · Outillage</span>
+          </Link>
           <div className="hdr-search"><SearchBox /></div>
+          <a className="hdr-tel" href={`https://wa.me/${CONTACT.whatsapp}`} target="_blank" rel="noopener noreferrer">
+            <IconWhatsApp size={26} />
+            <span><b>{CONTACT.whatsappDisplay}</b><small>Conseils et devis sur WhatsApp</small></span>
+          </a>
           <nav className="hdr-actions" aria-label="Accès rapides">
             <button type="button" className="hdr-act hdr-sbtn" aria-label="Rechercher un produit" onClick={findSearch}><IconSearch size={22} /></button>
-            <Link href="/contact" className="hdr-act hdr-quote"><IconChat size={22} /><span>Contact</span></Link>
-            <Link href="/contact?type=devis" className="hdr-act hdr-quote"><IconQuote size={22} /><span>Devis</span></Link>
             <Link href="/panier" className="hdr-act hdr-cart" aria-label={`Panier : ${n} article${n > 1 ? "s" : ""}`}>
-              <IconCart size={22} /><span>Panier</span>{n > 0 && <b className="badge" aria-hidden="true">{n > 99 ? "99+" : n}</b>}
+              <IconCart size={26} /><span>Mon panier</span><b className="badge" aria-hidden="true">{n > 99 ? "99+" : n}</b>
             </Link>
           </nav>
         </div>
@@ -75,10 +78,10 @@ export default function Header({ rayons }: { families: NavFamily[]; rayons: NavR
 
       <nav className="rnav" aria-label="Rayons">
         <div className="wrap rnav-in">
-          <div className="rnav-i"><Link href="/" className={pathname === "/" ? "on" : undefined}>Accueil</Link></div>
+          <div className="rnav-i rnav-home"><Link href="/" className={pathname === "/" ? "on" : undefined} aria-label="Accueil"><IconHome size={22} /></Link></div>
           {rayons.map((r) => (
             <div key={r.key} className={`rnav-i${r.key === "autres" ? " end" : ""}`}>
-              <Link href={`/${r.slug}`} className={cur === r.key ? "on" : undefined} aria-haspopup="true">{r.title} <IconChevronDown size={14} /></Link>
+              <Link href={`/${r.slug}`} className={`${cur === r.key ? "on" : ""}${r.key === "chauffage" ? " hot" : ""}`.trim() || undefined} aria-haspopup="true">{r.key === "chauffage" && <IconFlame size={18} />}{r.title} <IconChevronDown size={14} /></Link>
               <div className="rmega">
                 <div className="wrap rmega-in">
                   {r.key === "isolation" ? (
