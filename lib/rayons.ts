@@ -11,6 +11,7 @@ export type Rayon = {
   parts: Part[]; /** vignettes par famille plutôt que par sous-famille */ byFamily?: boolean;
   /** sélection de l'accueil : groupes de sous-familles et nombre de produits par groupe */
   picks: { label: string; subs: string[]; n: number; test?: (p: Card) => boolean }[];
+  /** garder l'ordre des groupes de « picks » sur l'accueil (sinon : les plus demandés d'abord) */ keepOrder?: boolean;
   /** produits complémentaires « Complétez votre chantier » */
   extra: string[]; extraText: string;
 };
@@ -44,12 +45,13 @@ export const RAYONS: Rayon[] = [
     brands: "Piveteau · Crépito · HEIZFUXX · Extraflame",
     parts: [["chauffage-bois", "granules-et-pellets"], ["chauffage-bois", "buches-de-bois"], ["chauffage-bois", "buches-densifiees"],
       ["energies-renouvelables", "poeles-a-granules"], ["chauffage-bois", "allume-feux-et-allumage"]],
+    // Accueil : le bois d'abord (bûches, granulés, bûches densifiées), un seul poêle à la fin
+    keepOrder: true,
     picks: [
+      { label: "Bûches", subs: ["buches-de-bois"], n: 4 },
       { label: "Granulés", subs: ["granules-et-pellets"], n: 4 },
-      { label: "Bûches", subs: ["buches-de-bois"], n: 3 },
       { label: "Bûches densifiées", subs: ["buches-densifiees"], n: 2 },
-      { label: "Poêle à granulés", subs: ["poeles-a-granules"], n: 2 },
-      { label: "Allumage", subs: ["allume-feux-et-allumage"], n: 1, test: (p) => (p.price ?? 0) < 50 },
+      { label: "Poêle à granulés", subs: ["poeles-a-granules"], n: 1 },
     ],
     extra: ["100-cubes-allume-feux-ecologiques", "50-allume-feux-en-laine-de-bois-naturels", "poele-a-granules-l12", "poele-a-granules-tissae-8kw-ventile-et-etanche",
       "gants-latex-rouge-noir"],
@@ -158,7 +160,7 @@ export function rayonPicks(r: Rayon) {
     if (g.subs.includes("laine-de-verre")) { const seen = new Set<number | null>(); pool = pool.filter((p) => !seen.has(p.thickness) && (seen.add(p.thickness), true)); }
     pool.filter((p) => !out.has(p.slug)).slice(0, g.n).forEach((p) => out.set(p.slug, p));
   }
-  return [...out.values()].sort(byDemand);
+  return r.keepOrder ? [...out.values()] : [...out.values()].sort(byDemand);
 }
 
 export const extraProducts = (r: Rayon) =>
