@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getProduct } from "@/lib/catalog";
 import { USES, lv, lvOf, minPpm2 } from "@/lib/laine";
-import { RAYONS, rayonByKey, rayonLinks, rayonPicks, rayonProducts, rayonTiles } from "@/lib/rayons";
+import { RAYONS, rayonByKey, rayonLinks, rayonPicks, rayonProducts } from "@/lib/rayons";
 import { eur, num } from "@/lib/format";
 import { COMPANY, SITE } from "@/lib/site";
 import type { Card } from "@/lib/types";
@@ -37,14 +37,6 @@ export default function Home() {
   const roll = minPpm2(lv.filter((p) => p.cu === "rouleau"));
   const rates = USES.map((u) => ({ key: u.key, label: u.title, href: `/laine-de-verre/${u.slug}`, ppm2: minPpm2(lvOf(u.key)) }));
   const steps = STEPS.map((s) => ({ ...s, items: s.slugs.map(getProduct).filter((p): p is Card => !!p && p.price != null) }));
-  // Rayon Chauffage bois mis en avant : une vignette par catégorie, avec le prix d'entrée
-  const ch = rayonByKey("chauffage");
-  const chItems = rayonProducts(ch);
-  const chTiles = rayonTiles(ch).map((t) => {
-    const sub = t.href.split("/").pop();
-    const prices = chItems.filter((p) => p.sub === sub && p.price != null).map((p) => p.price as number);
-    return { ...t, from: prices.length ? Math.min(...prices) : null };
-  });
 
   return (
     <>
@@ -99,58 +91,49 @@ export default function Home() {
         </ul></div>
       </section>
 
-      {/* Mise en avant : rayon Chauffage bois */}
-      {chItems.length > 0 && (
-        <section className="feu" aria-labelledby="feu-h">
-          <div className="wrap feu-in">
-            <div className="feu-txt">
-              <p className="kicker">Nouveau rayon · Spécial hiver</p>
-              <h2 id="feu-h">Chauffage bois</h2>
-              <p>Granulés et pellets en palette, bûches de chêne, hêtre et charme, bûches densifiées et poêles à granulés : faites votre stock pour l'hiver, livré chez vous.</p>
-              <Link href={`/${ch.slug}`} className="btn btn-primary">Voir les {chItems.length} produits <IconChevron size={18} /></Link>
-            </div>
-            <nav className="feu-tiles" aria-label="Catégories du rayon Chauffage bois">
-              {chTiles.map((t) => (
-                <Link key={t.href} href={t.href} className="feu-tile">
-                  <span className="feu-img">{t.image && <img src={t.image} alt="" loading="lazy" decoding="async" />}</span>
-                  <b>{t.name}</b>
-                  <small>{t.count} produit{t.count > 1 ? "s" : ""}{t.from != null ? <> · dès <span className="num">{eur(t.from)}</span></> : null}</small>
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </section>
-      )}
-
-      {/* Rayons en carrousels */}
-      <section className="ray-intro" aria-labelledby="rayons-h">
+      {/* Nos rayons : une carte par rayon (photo, nombre de produits, catégories principales) */}
+      <section className="rx" aria-labelledby="rayons-h">
         <div className="wrap">
-          <p className="eyebrow-v">Nos rayons</p>
-          <h2 id="rayons-h">Nos produits phares, rayon par rayon</h2>
-          <p className="lead">Dans chaque rayon, les références les plus demandées de chaque catégorie, en premier celles qui se vendent le mieux.</p>
-          <nav className="ray-jump" aria-label="Aller au rayon">
-            {RAYONS.map((r) => <a key={r.key} href={`#r${r.n}`}><span>{r.n}</span>{r.title}</a>)}
+          <div className="rx-h">
+            <div>
+              <p className="eyebrow-v">Nos rayons</p>
+              <h2 id="rayons-h">Tout le catalogue en 6 rayons</h2>
+            </div>
+            <Link href="/boutique" className="more-link">Tout le catalogue →</Link>
+          </div>
+          <nav className="rx-grid" aria-label="Rayons de la boutique">
+            {RAYONS.map((r) => {
+              const img = rayonPicks(r).find((p) => p.image)?.image ?? "";
+              return (
+                <Link key={r.key} href={`/${r.slug}`} className={`rx-card${r.key === "chauffage" ? " is-new" : ""}`}>
+                  <span className="rx-img">{img && <img src={img} alt="" loading="lazy" decoding="async" />}{r.key === "chauffage" && <em>Nouveau</em>}</span>
+                  <span className="rx-t"><b>{r.title}</b><small>{r.short}</small><span className="rx-n num">{rayonProducts(r).length} produits →</span></span>
+                </Link>
+              );
+            })}
           </nav>
         </div>
       </section>
-      {RAYONS.map((r) => {
+
+      {/* Deux sélections : les plus demandés en isolation, et le rayon Chauffage bois (spécial hiver) */}
+      {(["chauffage", "isolation"] as const).map((k) => {
+        const r = rayonByKey(k);
         const picks = rayonPicks(r);
         const labels = Object.fromEntries(picks.map((p) => [p.slug, r.picks.find((g) => g.subs.includes(p.sub))?.label ?? p.subName]));
-        const total = rayonProducts(r).length;
+        const winter = k === "chauffage";
         return (
-          <section key={r.key} className="ray" id={`r${r.n}`} aria-labelledby={`r${r.n}-h`}>
+          <section key={k} className={`ray${winter ? " ray-feu" : ""}`} id={`r${r.n}`} aria-labelledby={`r${r.n}-h`}>
             <div className="wrap">
               <div className="ray-h">
                 <div className="ray-t">
-                  <span className="ray-n">{r.n}</span>
                   <div>
-                    <h2 id={`r${r.n}-h`}><Link href={`/${r.slug}`}>{r.title}</Link></h2>
-                    <p>{r.desc}</p>
-                    {r.key === "isolation" && r.brands && <p className="ray-brands">Marques : <b>{r.brands}</b></p>}
+                    {winter && <p className="kicker">Nouveau rayon · Spécial hiver</p>}
+                    <h2 id={`r${r.n}-h`}><Link href={`/${r.slug}`}>{winter ? "Chauffage bois" : "Les plus demandés en isolation"}</Link></h2>
+                    <p>{winter ? "Granulés en palette, bûches de chêne, hêtre et charme, bûches densifiées et poêles à granulés : faites votre stock pour l'hiver, livré chez vous." : r.desc}</p>
                   </div>
                 </div>
                 <div className="ray-act">
-                  <Link href={`/${r.slug}`} className="more-link">Tout le rayon <span className="num">({total})</span></Link>
+                  <Link href={`/${r.slug}`} className="more-link">Tout le rayon <span className="num">({rayonProducts(r).length})</span></Link>
                   <ShelfArrows target={`car-${r.key}`} />
                 </div>
               </div>
@@ -158,7 +141,6 @@ export default function Home() {
                 {rayonLinks(r).map((l) => <Link key={l.href} href={l.href}>{l.name}</Link>)}
               </nav>
               <Shelf id={`car-${r.key}`} items={picks} label={`Produits phares : ${r.title}`} labels={labels} />
-              <p className="ray-sort">Les plus demandés en premier{r.key === "outillage" ? " · machines et outils à partir de 20 €" : ""}</p>
             </div>
           </section>
         );

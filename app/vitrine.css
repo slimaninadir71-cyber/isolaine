@@ -436,3 +436,40 @@ a { color: var(--g7); }
   .feu-tile b { font-size: 16.5px; }
 }
 @media (min-width: 1080px) { .feu-tiles { grid-template-columns: repeat(5, 1fr); } }
+
+/* Accueil simplifié : grille des 6 rayons */
+.rx { padding: 40px 0 8px; }
+.rx-h { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 18px; }
+.rx-h h2 { font-size: 27px; font-weight: 700; margin: 0; }
+.rx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rx-card { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; color: var(--ink); text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.rx-card:hover { border-color: var(--g7); box-shadow: 0 4px 14px rgba(23, 61, 50, .08); }
+.rx-card.is-new { border-color: #E8A33D; }
+.rx-img { position: relative; display: block; aspect-ratio: 4 / 3; background: #F3F4EF; overflow: hidden; }
+.rx-img img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.rx-img em { position: absolute; top: 8px; left: 8px; font: 700 11px var(--f-body); letter-spacing: .08em; text-transform: uppercase; font-style: normal; background: #E8A33D; color: #2A1D12; padding: 4px 8px; border-radius: 2px; }
+.rx-t { display: flex; flex-direction: column; gap: 3px; padding: 12px 14px 14px; flex: 1; }
+.rx-t b { font: 800 16px var(--f-head); font-stretch: 87.5%; text-transform: uppercase; }
+.rx-t small { color: var(--muted); font-size: 13.5px; line-height: 1.35; }
+.rx-n { margin-top: auto; padding-top: 8px; font-size: 13.5px; font-weight: 700; color: var(--g7); }
+@media (min-width: 761px) {
+  .rx { padding: 64px 0 16px; }
+  .rx-h h2 { font-size: 36px; }
+  .rx-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+}
+@media (min-width: 1080px) { .rx-grid { grid-template-columns: repeat(6, 1fr); } }
+/* Carrousel Chauffage bois sur fond chaud */
+.ray.ray-feu { background: linear-gradient(135deg, #2A1D12 0%, #173D32 100%); color: #fff; border-bottom: 4px solid #E8A33D; }
+.ray-feu h2, .ray-feu h2 a { color: #fff; }
+.ray-feu .kicker { color: #F2B65A; margin-bottom: 10px; }
+.ray-feu .kicker::before { background: #F2B65A; }
+.ray-feu .ray-t p:not(.kicker) { color: #E3D9CC; }
+.ray-feu .more-link { color: #F2B65A; }
+.ray-feu .arr { border-color: #F2B65A; color: #F2B65A; }
+.ray-feu .arr:hover { background: #F2B65A; color: #2A1D12; }
+.ray.ray-feu .ray-subs a { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .25); color: #fff; }
+.ray.ray-feu .ray-subs a:hover { border-color: #F2B65A; color: #F2B65A; }
+/* Menu des rayons : une seule ligne, même avec 6 rayons (plus serré sur les écrans moyens) */
+.rnav-i > a { white-space: nowrap; }
+@media (max-width: 1180px) { .rnav-i > a { padding: 0 10px; font-size: 14px; gap: 4px; } }
+@media (max-width: 960px) { .rnav-i > a { padding: 0 7px; font-size: 13px; } .rnav-i > a svg { display: none; } }
