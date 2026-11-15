@@ -413,3 +413,26 @@ a { color: var(--g7); }
 
 /* Commande : case « adresse de facturation différente » */
 .bill-toggle { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); font-weight: 600; }
+
+/* Mise en avant du rayon Chauffage bois (accueil) */
+.feu { background: linear-gradient(135deg, #2A1D12 0%, #173D32 100%); color: #fff; padding: 40px 0; border-bottom: 4px solid #E8A33D; }
+.feu .kicker { color: #F2B65A; }
+.feu .kicker::before { background: #F2B65A; }
+.feu h2 { color: #fff; font-size: 32px; font-weight: 800; text-transform: uppercase; margin: 0; }
+.feu-txt p:not(.kicker) { color: #E3D9CC; font-size: 16px; margin: 12px 0 22px; max-width: 460px; }
+.feu-in { display: grid; gap: 26px; }
+.feu-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.feu-tile { display: flex; flex-direction: column; background: #fff; color: var(--ink); text-decoration: none; border-radius: 4px; overflow: hidden; border: 2px solid transparent; }
+.feu-tile:hover { border-color: #E8A33D; }
+.feu-img { display: block; aspect-ratio: 4 / 3; background: #F3EEE6; overflow: hidden; }
+.feu-img img { width: 100%; height: 100%; object-fit: cover; }
+.feu-tile b { font: 700 15px var(--f-head); font-stretch: 87.5%; padding: 10px 12px 0; }
+.feu-tile small { color: var(--muted); font-size: 13px; padding: 2px 12px 12px; }
+@media (min-width: 761px) {
+  .feu { padding: 56px 0; }
+  .feu-in { grid-template-columns: 4fr 8fr; align-items: center; gap: 40px; }
+  .feu h2 { font-size: 44px; }
+  .feu-tiles { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .feu-tile b { font-size: 16.5px; }
+}
+@media (min-width: 1080px) { .feu-tiles { grid-template-columns: repeat(5, 1fr); } }

@@ -4,6 +4,10 @@ export const FAMILY_TEXT: Record<string, { short: string; intro: string }> = {
     short: "Laine de verre, laine de roche, laine de bois, polystyrène et membranes.",
     intro: "Isolants pour les murs, les combles, les toitures et les façades : laines minérales et laine de bois, polystyrène expansé, extrudé et graphité, panneaux de toiture et de soubassement, kits d'isolation par l'extérieur, membranes et sous-couches.",
   },
+  "chauffage-bois": {
+    short: "Granulés et pellets, bûches de bois, bûches densifiées et allume-feux.",
+    intro: "Combustibles pour poêle, insert, cheminée et chaudière : granulés de bois en palette ou demi-palette, bûches de chêne, hêtre et charme en plusieurs longueurs, bûches densifiées et allume-feux.",
+  },
   enduits: {
     short: "Colles, sous-enduits, treillis, primaires et enduits de finition.",
     intro: "Tout le système d'enduit pour l'isolation par l'extérieur et la rénovation : colles et sous-enduits de marouflage, armatures en fibre de verre, primaires d'accroche, enduits de finition, ragréages et chapes.",

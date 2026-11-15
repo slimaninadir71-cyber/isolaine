@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getProduct } from "@/lib/catalog";
 import { USES, lv, lvOf, minPpm2 } from "@/lib/laine";
-import { RAYONS, rayonLinks, rayonPicks, rayonProducts } from "@/lib/rayons";
+import { RAYONS, rayonByKey, rayonLinks, rayonPicks, rayonProducts, rayonTiles } from "@/lib/rayons";
 import { eur, num } from "@/lib/format";
 import { COMPANY, SITE } from "@/lib/site";
 import type { Card } from "@/lib/types";
@@ -37,6 +37,14 @@ export default function Home() {
   const roll = minPpm2(lv.filter((p) => p.cu === "rouleau"));
   const rates = USES.map((u) => ({ key: u.key, label: u.title, href: `/laine-de-verre/${u.slug}`, ppm2: minPpm2(lvOf(u.key)) }));
   const steps = STEPS.map((s) => ({ ...s, items: s.slugs.map(getProduct).filter((p): p is Card => !!p && p.price != null) }));
+  // Rayon Chauffage bois mis en avant : une vignette par catégorie, avec le prix d'entrée
+  const ch = rayonByKey("chauffage");
+  const chItems = rayonProducts(ch);
+  const chTiles = rayonTiles(ch).map((t) => {
+    const sub = t.href.split("/").pop();
+    const prices = chItems.filter((p) => p.sub === sub && p.price != null).map((p) => p.price as number);
+    return { ...t, from: prices.length ? Math.min(...prices) : null };
+  });
 
   return (
     <>
@@ -60,7 +68,7 @@ export default function Home() {
             </picture>
           )}
           <div className="v-hero-txt">
-            <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
+            <p className="kicker">−{PROMO_PCT} % sur l'isolation et le matériel</p>
             <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
             <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
             <div className="v-hero-cta">
@@ -90,6 +98,29 @@ export default function Home() {
             <div><b>Paiement sécurisé</b><p>Par carte bancaire, avec authentification 3-D Secure.</p></div></li>
         </ul></div>
       </section>
+
+      {/* Mise en avant : rayon Chauffage bois */}
+      {chItems.length > 0 && (
+        <section className="feu" aria-labelledby="feu-h">
+          <div className="wrap feu-in">
+            <div className="feu-txt">
+              <p className="kicker">Nouveau rayon · Spécial hiver</p>
+              <h2 id="feu-h">Chauffage bois</h2>
+              <p>Granulés et pellets en palette, bûches de chêne, hêtre et charme, bûches densifiées et poêles à granulés : faites votre stock pour l'hiver, livré chez vous.</p>
+              <Link href={`/${ch.slug}`} className="btn btn-primary">Voir les {chItems.length} produits <IconChevron size={18} /></Link>
+            </div>
+            <nav className="feu-tiles" aria-label="Catégories du rayon Chauffage bois">
+              {chTiles.map((t) => (
+                <Link key={t.href} href={t.href} className="feu-tile">
+                  <span className="feu-img">{t.image && <img src={t.image} alt="" loading="lazy" decoding="async" />}</span>
+                  <b>{t.name}</b>
+                  <small>{t.count} produit{t.count > 1 ? "s" : ""}{t.from != null ? <> · dès <span className="num">{eur(t.from)}</span></> : null}</small>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </section>
+      )}
 
       {/* Rayons en carrousels */}
       <section className="ray-intro" aria-labelledby="rayons-h">

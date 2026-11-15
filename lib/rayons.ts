@@ -4,7 +4,7 @@ import { families, products } from "./catalog";
 import { byDemand } from "./score";
 import type { Card } from "./types";
 
-export type RayonKey = "isolation" | "fixation" | "pose" | "outillage" | "autres";
+export type RayonKey = "isolation" | "chauffage" | "fixation" | "pose" | "outillage" | "autres";
 type Part = [family: string, sub?: string];
 export type Rayon = {
   key: RayonKey; n: string; slug: string; title: string; short: string; desc: string; brands?: string;
@@ -39,7 +39,24 @@ export const RAYONS: Rayon[] = [
     extraText: "Ossature, pare-vapeur et outils de découpe qui vont avec l'isolant.",
   },
   {
-    key: "fixation", n: "02", slug: "fixation-ossature", title: "Fixation & ossature", short: "Rails, montants, chevilles, vis",
+    key: "chauffage", n: "02", slug: "chauffage-bois", title: "Chauffage bois", short: "Granulés, bûches, poêles à granulés",
+    desc: "Granulés et pellets en palette, bûches de chêne, hêtre et charme, bûches densifiées, allume-feux et poêles à granulés : tout pour se chauffer au bois cet hiver.",
+    brands: "Piveteau · Crépito · HEIZFUXX · Extraflame",
+    parts: [["chauffage-bois", "granules-et-pellets"], ["chauffage-bois", "buches-de-bois"], ["chauffage-bois", "buches-densifiees"],
+      ["energies-renouvelables", "poeles-a-granules"], ["chauffage-bois", "allume-feux-et-allumage"]],
+    picks: [
+      { label: "Granulés", subs: ["granules-et-pellets"], n: 4 },
+      { label: "Bûches", subs: ["buches-de-bois"], n: 3 },
+      { label: "Bûches densifiées", subs: ["buches-densifiees"], n: 2 },
+      { label: "Poêle à granulés", subs: ["poeles-a-granules"], n: 2 },
+      { label: "Allumage", subs: ["allume-feux-et-allumage"], n: 1, test: (p) => (p.price ?? 0) < 50 },
+    ],
+    extra: ["100-cubes-allume-feux-ecologiques", "50-allume-feux-en-laine-de-bois-naturels", "poele-a-granules-l12", "poele-a-granules-tissae-8kw-ventile-et-etanche",
+      "gants-latex-rouge-noir"],
+    extraText: "Allume-feux et poêles à granulés pour compléter votre stock de combustible.",
+  },
+  {
+    key: "fixation", n: "03", slug: "fixation-ossature", title: "Fixation & ossature", short: "Rails, montants, chevilles, vis",
     desc: "L'ossature pour doubler un mur et tout ce qui fixe l'isolant : rails, montants et fourrures, chevilles d'isolation, vis, fixations techniques et fixations de volets.",
     brands: "Ejot · Etanco",
     parts: [["cloison-et-platrerie", "ossatures-et-rails"], ["cloison-et-platrerie", "accessoires-de-cloison"], ["quincaillerie", "chevilles-d-isolation"],
@@ -55,7 +72,7 @@ export const RAYONS: Rayon[] = [
     extraText: "L'isolant à poser entre les montants, le pare-vapeur et les outils pour fixer.",
   },
   {
-    key: "pose", n: "03", slug: "materiel-de-pose", title: "Matériel de pose", short: "Pare-vapeur, adhésifs, découpe, protections",
+    key: "pose", n: "04", slug: "materiel-de-pose", title: "Matériel de pose", short: "Pare-vapeur, adhésifs, découpe, protections",
     desc: "Pare-vapeur et membranes, mousse PU, adhésifs et bâches, couteaux à laine et scies, protections, consommables, spatules et outils de finition.",
     brands: "Izotherm · Sika",
     parts: [["isolants", "membranes-et-films"], ["isolants", "mousses-et-colles-pu"], ["outillage", "baches-adhesifs-et-sacs"], ["outillage", "couteaux-et-scies"],
@@ -73,7 +90,7 @@ export const RAYONS: Rayon[] = [
     extraText: "L'isolant et l'ossature qui vont avec votre matériel de pose.",
   },
   {
-    key: "outillage", n: "04", slug: "outillage", title: "Outillage", short: "Perceuse, scies, laser, malaxeur",
+    key: "outillage", n: "05", slug: "outillage", title: "Outillage", short: "Perceuse, scies, laser, malaxeur",
     desc: "Machines et outils de chantier : perceuse, disqueuses, scies, laser de mesure, malaxeur, découpe du polystyrène, cloueur à gaz, niveaux et outils à main.",
     parts: ["outillage-electroportatif", "accessoires-pour-electroportatif", "mesure-et-niveaux", "pinces-et-cisailles", "outillage-a-main", "marteaux-cles-et-tournevis"]
       .map((s): Part => ["outillage", s]),
@@ -87,16 +104,16 @@ export const RAYONS: Rayon[] = [
     extraText: "Les consommables et protections qui vont avec vos machines.",
   },
   {
-    key: "autres", n: "05", slug: "autres-produits", title: "Autres produits", short: "Enduits, façade, gouttières, chauffage", byFamily: true,
-    desc: "Enduits et colles de façade, profilés, décoration de façade, gouttières, poêles à granulés et chauffe-eau, trappes de visite et plaques.",
+    key: "autres", n: "06", slug: "autres-produits", title: "Autres produits", short: "Enduits, façade, gouttières, chaudières", byFamily: true,
+    desc: "Enduits et colles de façade, profilés, décoration de façade, gouttières, chaudières et chauffe-eau, trappes de visite et plaques.",
     brands: "Izotherm · Fassa Bortolo · Weber · Extraflame · GDS",
-    parts: [["enduits"], ["profiles-de-facade"], ["decoration-de-facade"], ["energies-renouvelables"], ["accessoires"],
+    parts: [["enduits"], ["profiles-de-facade"], ["decoration-de-facade"], ["energies-renouvelables", "chaudieres"], ["energies-renouvelables", "chauffe-eau"],
+      ["energies-renouvelables", "accessoires-chauffage-et-plomberie"], ["accessoires"],
       ["cloison-et-platrerie", "trappes-de-visite"], ["cloison-et-platrerie", "plaques-de-platre-et-ciment"], ["cloison-et-platrerie", "planchers"]],
     picks: [
       { label: "Profilés", subs: ["profiles-de-depart", "profiles-de-couronnement"], n: 3 },
       { label: "Enduits", subs: ["colles-et-sous-enduits"], n: 2, test: (p) => /enduit/i.test(p.name) },
       { label: "Gouttières", subs: ["gouttieres"], n: 2, test: (p) => /goutti[èe]re/i.test(p.name) },
-      { label: "Chauffage", subs: ["poeles-a-granules"], n: 2 },
       { label: "Décoration", subs: ["contours-de-fenetre"], n: 1 },
     ],
     extra: ["polystyrene-graphite-austrotherm-eps-ite-ep-120mm", "laine-de-verre-isover-etics-35", "chevilles-90-mm-clou-en-plastique-200-pcs", "scotch-facade-izotherm-48mm-x-50m",

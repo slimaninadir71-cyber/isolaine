@@ -15,6 +15,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Familles : nom affiché, adresse et ordre d'affichage
 const FAMILIES = [
   ["Isolant", "isolants", "Isolants"],
+  ["Chauffage bois", "chauffage-bois", "Chauffage bois"],
   ["Enduit", "enduits", "Enduits"],
   ["Profilé de façade", "profiles-de-facade", "Profilés de façade"],
   ["Décoration de façade", "decoration-de-facade", "Décoration de façade"],
@@ -85,6 +86,8 @@ const round2 = (x) => Math.round(x * 100) / 100;
 // Promotion : −20 % sur tout le catalogue. Le prix affiché ET le prix facturé sont les prix réduits (la commande lit ce catalogue) ; « was » garde le prix d'origine.
 const PROMO_PCT = 20;
 const disc = (x) => Math.round(Math.round(x * 100) * (100 - PROMO_PCT) / 100) / 100;
+// Familles vendues au prix de base, hors promotion −20 % (prix affiché = prix facturé, pas de prix barré)
+const NO_PROMO = new Set(["chauffage-bois"]);
 function lvUse(name) {
   if (/souffl/i.test(name)) return "souffler";
   if (/\bGR\s?32\b/i.test(name)) return "murs";
@@ -118,7 +121,16 @@ async function loadRows() {
   for (let i = 1; i <= 3; i++) {
     try {
       const r = await fetch(`${SB}/rest/v1/products?select=*,product_variants(*)&status=eq.published&order=position.asc&limit=2000`, { headers: { apikey: KEY } });
-      if (r.ok) return r.json();
+      if (r.ok) {
+        const rows = await r.json();
+        // Version d'essai uniquement : ajoute les fiches en brouillon du rayon Chauffage bois (jamais en production)
+        if (process.env.VERCEL_ENV === "preview") {
+          const a = await fetch(`${SB}/rest/v1/rpc/apercu_chauffage_bois`, { method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: "{}" });
+          if (a.ok) { const extra = await a.json(); console.log(`Aperçu : ${extra.length} fiches en brouillon ajoutées`); rows.push(...extra); }
+          else console.warn(`Aperçu indisponible : ${a.status}`);
+        }
+        return rows;
+      }
       console.warn(`Supabase ${r.status} : ${await r.text()}`);
     } catch (e) { console.warn("Supabase injoignable :", e.message); }
     await sleep(1500 * i);
@@ -183,16 +195,17 @@ for (const p of rows) {
   const pickup = PICKUP.test(allText) || PICKUP.test(p.description ?? "");
   if (pickup) { skipped++; continue; }
   const lead = (allText.match(LEAD)?.[1] ?? "").trim();
-  const variants = variantsRaw.map((v) => ({ id: String(v.id), label: cleanLabel(v.label) || "Unité", price: disc(Number(v.price)), was: Number(v.price), sku: v.sku || "" }));
+  const promo = !NO_PROMO.has(fam.slug);
+  const variants = variantsRaw.map((v) => ({ id: String(v.id), label: cleanLabel(v.label) || "Unité", price: promo ? disc(Number(v.price)) : Number(v.price), was: promo ? Number(v.price) : null, sku: v.sku || "" }));
   const attrs = attrsRaw
     .filter((a) => !(/^poids$/i.test(a.name) && !a.values.some(hasUnit)))
     .map((a) => ({ name: a.name, values: [...new Set(a.values.map(cleanLabel))].filter(Boolean) }))
     .filter((a) => a.values.length);
   const images = (p.images ?? []).slice(0, 3).map((_, i) => imgOf.get(`${p.slug}#${i}`)).filter(Boolean);
   const prices = variants.map((v) => v.price).filter((x) => x > 0);
-  const price = prices.length ? Math.min(...prices) : (p.price == null ? null : disc(Number(p.price)));
+  const price = prices.length ? Math.min(...prices) : (p.price == null ? null : promo ? disc(Number(p.price)) : Number(p.price));
   const wasList = variants.map((v) => v.was).filter((x) => x > 0);
-  const was = wasList.length ? Math.min(...wasList) : (p.price == null ? null : Number(p.price));
+  const was = !promo ? null : wasList.length ? Math.min(...wasList) : (p.price == null ? null : Number(p.price));
   const priceMax = prices.length ? Math.max(...prices) : price;
   const thickness = fam.slug === "isolants" ? thicknessOf(p.name) : null;
   const lv = fam.slug === "isolants" && subSlug === "laine-de-verre";
