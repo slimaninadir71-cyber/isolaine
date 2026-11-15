@@ -63,10 +63,17 @@ export default function Home() {
             <p className="kicker">−{PROMO_PCT} % sur tout le catalogue</p>
             <h1>Tout pour isoler.<span>Tout pour bien poser.</span></h1>
             <p className="v-hero-sub">Les bons matériaux pour vos combles, murs et chantiers, au prix juste.</p>
-            <div className="v-hero-cta">
-              <Link href="/isolation" className="btn btn-primary">Découvrir nos isolants <IconChevron size={18} /></Link>
-              <Link href="/contact?type=devis" className="btn btn-line">Demander un devis chantier</Link>
-            </div>
+            <nav className="v-hero-ray" aria-label="Nos rayons">
+              {RAYONS.map((r) => {
+                const img = rayonPicks(r).find((p) => p.image)?.image;
+                return (
+                  <Link key={r.key} href={`/${r.slug}`}>
+                    <span>{img && <img src={img} alt="" decoding="async" />}</span>
+                    <b>{r.title}</b>
+                  </Link>
+                );
+              })}
+            </nav>
             {(pal != null || roll != null) && (
               <div className="v-hero-from num">
                 {pal != null && <div><b>{eur(pal)}/m²</b>laine de verre à la palette</div>}
@@ -77,17 +84,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Avantages */}
-      <section className="adv" aria-label="Nos engagements">
+      {/* Avantages (bandeau compact) */}
+      <section className="adv adv-s" aria-label="Nos engagements">
         <div className="wrap"><ul>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11zM13.5 9.5h4.5l3.5 3.5v3h-8" /><circle cx="6.5" cy="17.5" r="1.8" /><circle cx="17.5" cy="17.5" r="1.8" /></svg>
-            <div><b>Livraison offerte</b><p>France métropolitaine et Belgique. {SITE.ship}.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M4 9.5h16M9.5 4v16" /></svg>
-            <div><b>Prix au m² affiché</b><p>Sur chaque rouleau et chaque palette de laine, pour comparer d'un coup d'œil.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg>
-            <div><b>À l'unité ou à la palette</b><p>Un rouleau pour un petit chantier, une palette complète pour un grand.</p></div></li>
-          <li><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="8.5" cy="8" r="3" /><circle cx="16.5" cy="9" r="2.5" /><path d="M3 19c.8-3.4 3-5 5.5-5s4.7 1.6 5.5 5M14 14.5c2.6-.6 5.4.6 6.5 4.5" /></svg>
-            <div><b>Paiement sécurisé</b><p>Par carte bancaire, avec authentification 3-D Secure.</p></div></li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M2.5 6.5h11v9.5h-11zM13.5 9.5h4.5l3.5 3.5v3h-8" /><circle cx="6.5" cy="17.5" r="1.8" /><circle cx="17.5" cy="17.5" r="1.8" /></svg><span><b>Livraison offerte</b> France et Belgique</span></li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M4 9.5h16M9.5 4v16" /></svg><span><b>Prix au m²</b> affiché</span></li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M3 19h18M5 19v-3h14v3M6 16V9h5v7M13 16V6h5v10" /></svg><span><b>À l'unité</b> ou à la palette</span></li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="1.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg><span><b>Paiement sécurisé</b> 3-D Secure</span></li>
         </ul></div>
       </section>
 
