@@ -9,7 +9,7 @@ import { IconBox } from "./Icons";
 /**
  * Carte produit : photo, catégorie et marque, nom, caractéristiques (épaisseur, R, surface, conditionnement),
  * prix mis en avant (prix au m² quand il est connu, sinon prix exact), remise en cours et bouton d'achat.
- * Le prix affiché est le prix facturé (remise de 20 % appliquée au catalogue, voir scripts/fetch-catalog.mjs).
+ * Le prix affiché est le prix facturé (remise de 40 % appliquée au catalogue, voir scripts/fetch-catalog.mjs).
  */
 export function ProductCard({ p, priority = false, label }: { p: Card; priority?: boolean; label?: string }) {
   const { add, notify } = useCart();

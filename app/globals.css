@@ -518,7 +518,7 @@ main:focus { outline: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* Promotion −20 % : pastille rouge, ancien prix barré */
+/* Promotion −40 % : pastille rouge, ancien prix barré */
 .promo-sticker { position: absolute; left: 8px; top: 8px; z-index: 2; display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: #d6001c; color: #fff; font-weight: 800; font-size: .82rem; line-height: 1.1; letter-spacing: .01em; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
 .promo-sticker.promo-inline { position: static; vertical-align: middle; margin-left: 10px; font-size: .9rem; }
 .was { display: inline-block; margin-right: 8px; color: var(--muted); font-weight: 500; font-size: .85em; text-decoration: line-through; }

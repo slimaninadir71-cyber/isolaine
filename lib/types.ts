@@ -13,7 +13,7 @@ export type Card = {
   w: number;
   h: number;
   price: number | null;
-  /** Prix avant remise de −20 % */
+  /** Prix avant remise de −40 % */
   was?: number | null;
   /** Score « chances de vente » (lib/score.ts), calculé au chargement du catalogue */
   score?: number;

@@ -83,10 +83,10 @@ export function tidyName(name) {
 // Laine de verre : usage, revêtement, mode de vente et surface couverte, lus dans le nom et la fiche
 const num = (s) => Number(String(s).replace(/\s/g, "").replace(",", "."));
 const round2 = (x) => Math.round(x * 100) / 100;
-// Promotion : −20 % sur tout le catalogue. Le prix affiché ET le prix facturé sont les prix réduits (la commande lit ce catalogue) ; « was » garde le prix d'origine.
-const PROMO_PCT = 20;
+// Promotion : −40 % sur tout le catalogue. Le prix affiché ET le prix facturé sont les prix réduits (la commande lit ce catalogue) ; « was » garde le prix d'origine.
+const PROMO_PCT = 40;
 const disc = (x) => Math.round(Math.round(x * 100) * (100 - PROMO_PCT) / 100) / 100;
-// Familles vendues au prix de base, hors promotion −20 % (aucune pour l'instant : le chauffage bois est aussi remisé)
+// Familles vendues au prix de base, hors promotion −40 % (aucune pour l'instant : le chauffage bois est aussi remisé)
 const NO_PROMO = new Set([]);
 function lvUse(name) {
   if (/souffl/i.test(name)) return "souffler";
