@@ -17,7 +17,8 @@ function browserData() {
 type Field = "name" | "company" | "email" | "phone" | "address" | "postal" | "city" | "country" | "notes";
 
 export function Checkout({ cardEnabled = false }: { cardEnabled?: boolean }) {
-  const { items, ready, subtotal, clear } = useCart();
+  const { items, ready, subtotal, clear, refresh } = useCart();
+  useEffect(() => { refresh(); }, [refresh]); // prix du panier vérifiés à l'arrivée sur la page de paiement
   const router = useRouter();
   const [f, setF] = useState<Record<Field, string>>({ name: "", company: "", email: "", phone: "", address: "", postal: "", city: "", country: "France", notes: "" });
   // Adresse de facturation différente : facultative, cochée par le client

@@ -24,6 +24,7 @@ type Ctx = {
   count: number;
   subtotal: number;
   notify: (msg: string, link?: { href: string; label: string }) => void;
+  refresh: () => Promise<void>;
 };
 
 const CartCtx = createContext<Ctx | null>(null);
@@ -35,6 +36,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState<{ msg: string; link?: { href: string; label: string }; id: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const itemsRef = useRef<CartItem[]>([]);
+  itemsRef.current = items;
 
   useEffect(() => {
     try {
@@ -46,6 +49,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch { /* stockage indisponible : panier en mémoire */ }
     setReady(true);
   }, []);
+  // Prix remis à jour d'après le catalogue en ligne : un article ajouté avant un changement de prix (promotion…) affiche le prix réellement facturé.
+  const refresh = useCallback(async () => {
+    const cur = itemsRef.current;
+    if (!cur.length) return;
+    try {
+      const r = await fetch("/api/panier/prix", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cur.map((i) => ({ slug: i.slug, variantId: i.variantId })) }) });
+      if (!r.ok) return;
+      const { prices } = (await r.json()) as { prices: Record<string, { price: number; name: string; label: string } | null> };
+      setItems((c) => c.map((x) => {
+        const p = prices[x.key];
+        return p && (p.price !== x.price || p.name !== x.name) ? { ...x, price: p.price, name: p.name, label: p.label } : x;
+      }));
+    } catch { /* hors ligne : le serveur recalcule de toute façon le montant facturé */ }
+  }, []);
+  useEffect(() => { if (ready) refresh(); }, [ready, refresh]);
   useEffect(() => {
     if (!ready) return;
     try { localStorage.setItem(KEY, JSON.stringify(items)); } catch { /* ignore */ }
@@ -70,10 +88,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clear = useCallback(() => setItems([]), []);
 
   const value = useMemo<Ctx>(() => ({
-    items, ready, add, setQty, remove, clear, notify,
+    items, ready, add, setQty, remove, clear, notify, refresh,
     count: items.reduce((n, i) => n + i.qty, 0),
     subtotal: Math.round(items.reduce((n, i) => n + i.qty * i.price, 0) * 100) / 100,
-  }), [items, ready, add, setQty, remove, clear, notify]);
+  }), [items, ready, add, setQty, remove, clear, notify, refresh]);
 
   return (
     <CartCtx.Provider value={value}>
