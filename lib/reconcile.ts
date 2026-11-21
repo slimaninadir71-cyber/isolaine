@@ -1,7 +1,20 @@
 // Rapprochement d'un paiement : met à jour la commande et prévient l'équipe. Sans danger si appelé plusieurs fois (webhook et retour client).
-import { adminConfigured, markPaid, getOrder, setPayment, recordCustomerMail } from "@/lib/supabase-admin";
+import { adminConfigured, markPaid, getOrder, setPayment, recordCustomerMail, type OrderRow } from "@/lib/supabase-admin";
 import { classify } from "@/lib/cawl";
 import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
+
+type RefusedOrder = Pick<OrderRow, "reference" | "customer_name" | "email" | "phone" | "items" | "total">;
+
+/** Prévient l'équipe d'un paiement refusé ou annulé (une seule fois : appelé au passage à « refusé ou annulé »). */
+export async function notifyRefused(order: RefusedOrder, status: string): Promise<void> {
+  try {
+    await notifyTeam(`Paiement refusé – commande ${order.reference} – ${Number(order.total).toFixed(2)} €`, [
+      ["Référence", order.reference], ["Client", order.customer_name], ["E-mail", order.email], ["Téléphone", order.phone],
+      ["Articles", itemsText(order.items)], ["Total", `${Number(order.total).toFixed(2)} €`],
+      ["Statut de la banque", status || "inconnu"], ["À faire", "Contacter le client : la commande n'est pas payée."],
+    ], order.email);
+  } catch (e) { console.error("notify refused", (e as Error).message); }
+}
 
 export type PaymentFacts = { id: string; status: string; amount?: number };
 
@@ -28,5 +41,6 @@ export async function reconcilePayment(reference: string, pay: PaymentFacts, opt
     await recordCustomerMail(reference, await notifyCustomer(order));
   } else if ((kind === "failed" || (opts.final && kind !== "paid")) && order.payment_status !== "payé" && order.payment_status !== "refusé ou annulé") {
     await setPayment(reference, { payment_status: "refusé ou annulé", payment_id: pay.id || null });
+    await notifyRefused(order, pay.status);
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { classify, verifyWebhook } from "@/lib/cawl";
 import { adminConfigured, markPaid, getOrder, setPayment, recordCustomerMail } from "@/lib/supabase-admin";
 import { billingLine, itemsText, notifyCustomer, notifyTeam, promoLine } from "@/lib/mail";
+import { notifyRefused } from "@/lib/reconcile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +40,10 @@ export async function POST(req: Request) {
           await recordCustomerMail(ref, await notifyCustomer(order));
         }
       } else if (kind === "failed" && order.payment_status !== "payé") {
-        await setPayment(ref, { payment_status: "refusé ou annulé", payment_id: pay.id ?? null });
+        if (order.payment_status !== "refusé ou annulé") {
+          await setPayment(ref, { payment_status: "refusé ou annulé", payment_id: pay.id ?? null });
+          await notifyRefused(order, pay.status ?? "");
+        }
       }
     } catch (e) {
       console.error("webhook", (e as Error).message);
