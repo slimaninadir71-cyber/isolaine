@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { checkPendingPayments } from "@/lib/pending";
 import { randomBytes } from "node:crypto";
 import { getDetail, getProduct } from "@/lib/catalog";
 import { clean, insertRow, isEmail } from "@/lib/supabase-rest";
@@ -92,6 +93,8 @@ export async function POST(req: Request) {
   ];
   if (clean(body.notes, 2000)) mailLines.push(["Précisions", clean(body.notes, 2000)]);
   await notifyTeam(`Nouvelle commande ${ref} – ${total.toFixed(2)} €`, mailLines, email);
+
+  after(() => checkPendingPayments().catch((e) => console.error("pending", (e as Error).message)));
 
   // Carte : le paiement est lancé ensuite par /api/cawl/pay (montant relu sur la commande enregistrée).
   if (card) return NextResponse.json({ reference: ref, card: true });

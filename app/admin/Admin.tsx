@@ -212,7 +212,7 @@ function Clients({ run, say }: { run: Run; say: Say }) {
     await run({ action: "resendConfirmation", reference: o.reference }, `Confirmation de la commande ${o.reference} envoyée à ${o.email}.`);
     setBusy(false); load();
   };
-  const PAY: Record<string, string> = { "payé": "Payée", "en attente": "Paiement en attente", aucun: "Sur confirmation", "refusé ou annulé": "Paiement refusé", "montant à vérifier": "Montant à vérifier", "erreur de paiement à vérifier": "Paiement à vérifier" };
+  const PAY: Record<string, string> = { "payé": "Payée", "en attente": "Paiement en attente", aucun: "Sur confirmation", "refusé ou annulé": "Paiement refusé", "non finalisé": "Paiement non finalisé", "montant à vérifier": "Montant à vérifier", "erreur de paiement à vérifier": "Paiement à vérifier" };
   return (
     <>
       <section id="adm-write" className="adm-box" style={{ maxWidth: 720 }}>

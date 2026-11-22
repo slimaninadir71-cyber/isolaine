@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { listCampaigns, rpc, sb, sbRows } from "@/lib/supabase-admin";
+import { checkPendingPayments } from "@/lib/pending";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export async function GET(req: Request) {
   const noStore = { "Cache-Control": "no-store" };
   try {
     if (view === "stats") {
+      await checkPendingPayments().catch(() => 0);
       const [stats, campaigns, promo] = await Promise.all([rpc("marketing_stats"), listCampaigns(), sbRows("promo_codes?select=code,pct,active&order=code.asc")]);
       return NextResponse.json({ stats, campaigns, promo }, { headers: noStore });
     }
@@ -47,7 +49,8 @@ export async function GET(req: Request) {
       const total = Number((res.headers.get("content-range") || "").split("/")[1]);
       return NextResponse.json({ rows, total: Number.isFinite(total) ? total : page * SIZE + rows.length, size: SIZE }, { headers: noStore });
     }
-    if (view === "clients") { // dernières demandes (contact, devis) et dernières commandes, pour y répondre
+    if (view === "clients") {
+      await checkPendingPayments().catch(() => 0); // paiements restés en attente : statut relu chez CAWL avant affichage // dernières demandes (contact, devis) et dernières commandes, pour y répondre
       const [requests, orders] = await Promise.all([
         sbRows("requests?select=id,created_at,kind,name,email,phone,product,message,status&order=created_at.desc&limit=40"),
         sbRows("orders?select=reference,created_at,customer_name,email,total,payment_method,payment_status,status,customer_mail_at,customer_mail_error&order=created_at.desc&limit=40"),
