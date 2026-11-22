@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cawlEnabled, getPaymentDetails } from "@/lib/cawl";
+import { cawlEnabled, classify, getPaymentDetails } from "@/lib/cawl";
 import { adminConfigured, getOrder } from "@/lib/supabase-admin";
 import { reconcilePayment } from "@/lib/reconcile";
 import { SITE } from "@/lib/site";
@@ -15,9 +15,11 @@ async function back(req: Request) {
   try {
     const order = await getOrder(reference);
     if (order && order.payment_status === "en attente" && order.payment_id) {
-      const d = await getPaymentDetails(order.payment_id);
+      let d = await getPaymentDetails(order.payment_id);
+      // La banque vient de rendre la main : si CAWL est encore « en cours », on relit une fois après 3 s.
+      if (classify(d.status) === "pending") { await new Promise((r) => setTimeout(r, 3000)); d = await getPaymentDetails(order.payment_id); }
       // Le paiement doit porter la référence de cette commande ; le montant est celui relu chez CAWL.
-      if (!d.reference || d.reference === reference) await reconcilePayment(reference, { id: order.payment_id, status: d.status, amount: typeof d.amount === "number" ? d.amount : Math.round(Number(order.total) * 100) }, { final: true });
+      if (!d.reference || d.reference === reference) await reconcilePayment(reference, { id: order.payment_id, status: d.status, amount: typeof d.amount === "number" ? d.amount : Math.round(Number(order.total) * 100) }); // statut encore « en cours » (banque pas finie) : la commande reste en attente, relue plus tard (lib/pending.ts)
     }
   } catch (e) { console.error("cawl return", (e as Error).message); }
   return NextResponse.redirect(done, 303);
