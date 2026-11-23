@@ -22,7 +22,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
 
 export function Admin() {
   const [auth, setAuth] = useState<"wait" | "off" | "login" | "ok">("wait");
-  const [tab, setTab] = useState<"vue" | "clients" | "prospects" | "emails" | "reglages">("vue");
+  const [tab, setTab] = useState<"ventes" | "vue" | "clients" | "prospects" | "emails" | "reglages">("ventes");
   const [data, setData] = useState<{ stats: Stats; campaigns: Campaign[]; promo: Promo[]; visites?: Visite[] } | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const say = (text: string, ok = true) => setMsg({ ok, text });
@@ -37,9 +37,10 @@ export function Admin() {
   return (
     <>
       <div className="adm-top"><h1>Marketing &amp; Newsletter</h1><button type="button" className="btn btn-ghost btn-sm" onClick={async () => { await fetch("/api/admin/session", { method: "DELETE" }); setAuth("login"); }}>Se déconnecter</button></div>
-      <div className="adm-tabs" role="tablist">{([["vue", "Vue d'ensemble"], ["clients", "Clients"], ["prospects", "Prospects"], ["emails", "E-mails"], ["reglages", "Réglages"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{l}</button>)}</div>
+      <div className="adm-tabs" role="tablist">{([["ventes", "Ventes"], ["vue", "Vue d'ensemble"], ["clients", "Clients"], ["prospects", "Prospects"], ["emails", "E-mails"], ["reglages", "Réglages"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{l}</button>)}</div>
       {msg && <p className={msg.ok ? "adm-ok" : "form-err"} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       {!data ? <p className="muted" role="status">Chargement des données…</p>
+        : tab === "ventes" ? <Ventes say={say} />
         : tab === "vue" ? <Overview s={data.stats} visites={data.visites ?? []} />
         : tab === "clients" ? <Clients run={run} say={say} />
         : tab === "prospects" ? <Prospects campaigns={data.campaigns} run={run} say={say} />
@@ -56,6 +57,40 @@ function Login({ onOk }: { onOk: () => void }) {
 }
 
 const Tile = ({ label, value, sub }: { label: string; value: ReactNode; sub?: string }) => <div className="adm-tile"><span>{label}</span><b>{value}</b>{sub && <small>{sub}</small>}</div>;
+
+type Jour = { jour: string; commandes: number; payees: number; echecs: number; ca: number; visiteurs: number };
+type Vente = { reference: string; paid_at: string | null; customer_name: string; city: string; total: number; status: string };
+type Dash = { ca_jour: number; ca_7: number; ca_30: number; ca_mois: number; ca_total: number; nb_payees: number; nb_payees_30: number; panier_moyen: number; echecs_30: number; attente: number; jours: Jour[]; dernieres: Vente[] };
+
+/** Tableau de bord des ventes : chiffre d'affaires encaissé (paiements validés), jour par jour. */
+function Ventes({ say }: { say: Say }) {
+  const [d, setD] = useState<Dash | null>(null);
+  const load = useCallback(async () => { try { setD(await api<Dash>("/api/admin/data?view=ventes")); } catch (e) { say((e as Error).message, false); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
+  if (!d) return <p className="muted" role="status">Chargement des ventes…</p>;
+  const jour = (s: string) => new Date(`${s}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "2-digit" });
+  const max = Math.max(1, ...d.jours.map((j) => Number(j.ca)));
+  return (
+    <>
+      <div className="adm-head"><h2>Ventes</h2><button type="button" className="btn btn-ghost btn-sm" onClick={load}>Actualiser</button></div>
+      <div className="adm-tiles">
+        <Tile label="Aujourd'hui" value={eur(d.ca_jour)} />
+        <Tile label="7 derniers jours" value={eur(d.ca_7)} />
+        <Tile label="Ce mois-ci" value={eur(d.ca_mois)} />
+        <Tile label="Depuis le début" value={eur(d.ca_total)} sub={`${d.nb_payees} ventes payées`} />
+        <Tile label="Panier moyen" value={eur(d.panier_moyen)} />
+        <Tile label="Paiements échoués, 30 jours" value={d.echecs_30} sub={d.attente ? `${d.attente} en attente` : "aucun en attente"} />
+      </div>
+      <h2>Jour par jour (30 derniers jours)</h2>
+      <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Jour</th><th>Chiffre d'affaires</th><th>Ventes payées</th><th>Commandes passées</th><th>Paiements échoués</th><th>Visiteurs</th></tr></thead>
+        <tbody>{d.jours.map((j) => <tr key={j.jour} className={Number(j.ca) ? "" : "adm-dim"}><td>{jour(j.jour)}</td><td><span className="adm-bar-ca" style={{ width: `${Math.round((Number(j.ca) / max) * 100)}%` }} aria-hidden="true" /><b>{eur(j.ca)}</b></td><td>{j.payees}</td><td>{j.commandes}</td><td>{j.echecs || "–"}</td><td>{j.visiteurs || "–"}</td></tr>)}</tbody></table></div>
+      <h2>Dernières ventes payées</h2>
+      <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Payée le</th><th>Commande</th><th>Client</th><th>Ville</th><th>Montant</th><th>Suivi</th></tr></thead>
+        <tbody>{d.dernieres.length ? d.dernieres.map((v) => <tr key={v.reference}><td>{dt(v.paid_at)}</td><td>{v.reference}</td><td>{v.customer_name}</td><td>{v.city}</td><td><b>{eur(v.total)}</b></td><td>{v.status}</td></tr>) : <tr><td colSpan={6} className="muted">Aucune vente payée pour l'instant.</td></tr>}</tbody></table></div>
+      <p className="muted adm-note">Montants TTC réellement encaissés par carte (après codes promo). Les commandes d'essai de moins de 1 € ne sont pas comptées. Visiteurs : compteur du site, depuis le 23/11.</p>
+    </>
+  );
+}
 
 function Visites({ v }: { v: Visite[] }) {
   const sum = (k: "visiteurs" | "pages", n: number) => v.slice(0, n).reduce((a, r) => a + Number(r[k]), 0);

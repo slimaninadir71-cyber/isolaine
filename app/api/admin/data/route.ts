@@ -31,6 +31,10 @@ export async function GET(req: Request) {
   const u = new URL(req.url), view = u.searchParams.get("view");
   const noStore = { "Cache-Control": "no-store" };
   try {
+    if (view === "ventes") {
+      await checkPendingPayments().catch(() => 0);
+      return NextResponse.json(await rpc("ventes_dashboard", { nb: 30 }), { headers: noStore });
+    }
     if (view === "stats") {
       await checkPendingPayments().catch(() => 0);
       const [stats, campaigns, promo, visites] = await Promise.all([rpc("marketing_stats"), listCampaigns(), sbRows("promo_codes?select=code,pct,active&order=code.asc"), rpc("visites_par_jour", { nb: 30 }).catch(() => [])]);
