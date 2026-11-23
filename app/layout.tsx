@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Archivo, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { VisitBeacon } from "@/components/VisitBeacon";
 import "./globals.css";
 import "./lv.css";
 import "./vitrine.css";
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <WhatsAppButton />
         <GuidePopup />
         <Analytics />
+        <VisitBeacon />
       </body>
     </html>
   );

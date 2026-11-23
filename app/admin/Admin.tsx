@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 type Campaign = { id: number; key: string; name: string; subject: string; content: string; campaign_type: string; scheduled_delay: number; active: boolean; status: string; scheduled_at: string | null; sent_at: string | null };
 type Stats = Record<string, number> & { sources: { source: string; prospects: number; abonnes: number; telechargeurs: number; clients: number }[]; campagnes: { id: number; envoyes: number; echecs: number; en_attente: number }[] };
 type Promo = { code: string; pct: number; active: boolean };
+type Visite = { jour: string; visiteurs: number; pages: number; mobiles: number };
 type Prospect = { id: number; email: string; created_at: string; source: string | null; page: string | null; newsletter_consent: boolean; newsletter_consent_at: string | null; consent_policy_version: string | null; guide_sent_at: string | null; guide_downloads: number; customer_status: string; coupon_used_at: string | null; unsubscribed_at: string | null };
 type Ev = { id: number; campaign_id: number | null; event_type: string; status: string; attempts: number; sent_at: string | null; error_message: string | null; created_at: string };
 
@@ -22,7 +23,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
 export function Admin() {
   const [auth, setAuth] = useState<"wait" | "off" | "login" | "ok">("wait");
   const [tab, setTab] = useState<"vue" | "clients" | "prospects" | "emails" | "reglages">("vue");
-  const [data, setData] = useState<{ stats: Stats; campaigns: Campaign[]; promo: Promo[] } | null>(null);
+  const [data, setData] = useState<{ stats: Stats; campaigns: Campaign[]; promo: Promo[]; visites?: Visite[] } | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const say = (text: string, ok = true) => setMsg({ ok, text });
   const load = useCallback(async () => { try { setData(await api("/api/admin/data?view=stats")); } catch (e) { setMsg({ ok: false, text: (e as Error).message }); } }, []);
@@ -39,7 +40,7 @@ export function Admin() {
       <div className="adm-tabs" role="tablist">{([["vue", "Vue d'ensemble"], ["clients", "Clients"], ["prospects", "Prospects"], ["emails", "E-mails"], ["reglages", "Réglages"]] as const).map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => { setTab(k); setMsg(null); }}>{l}</button>)}</div>
       {msg && <p className={msg.ok ? "adm-ok" : "form-err"} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       {!data ? <p className="muted" role="status">Chargement des données…</p>
-        : tab === "vue" ? <Overview s={data.stats} />
+        : tab === "vue" ? <Overview s={data.stats} visites={data.visites ?? []} />
         : tab === "clients" ? <Clients run={run} say={say} />
         : tab === "prospects" ? <Prospects campaigns={data.campaigns} run={run} say={say} />
         : tab === "emails" ? <Emails campaigns={data.campaigns} stats={data.stats} run={run} say={say} />
@@ -56,9 +57,29 @@ function Login({ onOk }: { onOk: () => void }) {
 
 const Tile = ({ label, value, sub }: { label: string; value: ReactNode; sub?: string }) => <div className="adm-tile"><span>{label}</span><b>{value}</b>{sub && <small>{sub}</small>}</div>;
 
-function Overview({ s }: { s: Stats }) {
+function Visites({ v }: { v: Visite[] }) {
+  const sum = (k: "visiteurs" | "pages", n: number) => v.slice(0, n).reduce((a, r) => a + Number(r[k]), 0);
+  const jour = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "2-digit" });
   return (
     <>
+      <h2>Visites du site</h2>
+      <div className="adm-tiles">
+        <Tile label="Visiteurs aujourd'hui" value={v[0]?.jour === new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" }) ? v[0].visiteurs : 0} />
+        <Tile label="Visiteurs, 7 derniers jours" value={sum("visiteurs", 7)} sub={`${sum("pages", 7)} pages vues`} />
+        <Tile label="Visiteurs, 30 derniers jours" value={sum("visiteurs", 30)} sub={`${sum("pages", 30)} pages vues`} />
+      </div>
+      <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Jour</th><th>Visiteurs</th><th>Pages vues</th><th>dont sur mobile</th></tr></thead>
+        <tbody>{v.length ? v.map((r) => <tr key={r.jour}><td>{jour(r.jour)}</td><td>{r.visiteurs}</td><td>{r.pages}</td><td>{r.visiteurs ? `${Math.round((r.mobiles / r.visiteurs) * 100)} %` : "–"}</td></tr>) : <tr><td colSpan={4} className="muted">Pas encore de visite enregistrée : le compteur démarre à sa mise en ligne.</td></tr>}</tbody></table></div>
+      <p className="muted adm-note">Comptage anonyme, sans cookie : un visiteur est compté une fois par jour, les robots sont exclus.</p>
+    </>
+  );
+}
+
+function Overview({ s, visites }: { s: Stats; visites: Visite[] }) {
+  return (
+    <>
+      <Visites v={visites} />
+      <h2>Prospects</h2>
       <div className="adm-tiles">
         <Tile label="Prospects au total" value={s.prospects} sub={`${s.clients} devenus clients`} />
         <Tile label="Nouveaux, 7 derniers jours" value={s.semaine} />

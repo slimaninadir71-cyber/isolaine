@@ -33,8 +33,8 @@ export async function GET(req: Request) {
   try {
     if (view === "stats") {
       await checkPendingPayments().catch(() => 0);
-      const [stats, campaigns, promo] = await Promise.all([rpc("marketing_stats"), listCampaigns(), sbRows("promo_codes?select=code,pct,active&order=code.asc")]);
-      return NextResponse.json({ stats, campaigns, promo }, { headers: noStore });
+      const [stats, campaigns, promo, visites] = await Promise.all([rpc("marketing_stats"), listCampaigns(), sbRows("promo_codes?select=code,pct,active&order=code.asc"), rpc("visites_par_jour", { nb: 30 }).catch(() => [])]);
+      return NextResponse.json({ stats, campaigns, promo, visites }, { headers: noStore });
     }
     if (view === "prospects") {
       const csv = u.searchParams.get("format") === "csv";
