@@ -81,10 +81,10 @@ function Ventes({ say }: { say: Say }) {
         <Tile label="Panier moyen" value={eur(d.panier_moyen)} />
         <Tile label="Paiements échoués, 30 jours" value={d.echecs_30} sub={d.attente ? `${d.attente} en attente` : "aucun en attente"} />
       </div>
-      <h2>Jour par jour (30 derniers jours)</h2>
+      <h2>Jour par jour, depuis la première commande</h2>
       <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Jour</th><th>Chiffre d'affaires</th><th>Ventes payées</th><th>Commandes passées</th><th>Paiements échoués</th><th>Visiteurs</th></tr></thead>
         <tbody>{d.jours.map((j) => <tr key={j.jour} className={Number(j.ca) ? "" : "adm-dim"}><td>{jour(j.jour)}</td><td><span className="adm-bar-ca" style={{ width: `${Math.round((Number(j.ca) / max) * 100)}%` }} aria-hidden="true" /><b>{eur(j.ca)}</b></td><td>{j.payees}</td><td>{j.commandes}</td><td>{j.echecs || "–"}</td><td>{j.visiteurs || "–"}</td></tr>)}</tbody></table></div>
-      <h2>Dernières ventes payées</h2>
+      <h2>Toutes les ventes payées</h2>
       <div className="adm-scroll"><table className="adm-table"><thead><tr><th>Payée le</th><th>Commande</th><th>Client</th><th>Ville</th><th>Montant</th><th>Suivi</th></tr></thead>
         <tbody>{d.dernieres.length ? d.dernieres.map((v) => <tr key={v.reference}><td>{dt(v.paid_at)}</td><td>{v.reference}</td><td>{v.customer_name}</td><td>{v.city}</td><td><b>{eur(v.total)}</b></td><td>{v.status}</td></tr>) : <tr><td colSpan={6} className="muted">Aucune vente payée pour l'instant.</td></tr>}</tbody></table></div>
       <p className="muted adm-note">Montants TTC réellement encaissés par carte (après codes promo). Les commandes d'essai de moins de 1 € ne sont pas comptées. Visiteurs : compteur du site, depuis le 23/11.</p>

@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   try {
     if (view === "ventes") {
       await checkPendingPayments().catch(() => 0);
-      return NextResponse.json(await rpc("ventes_dashboard", { nb: 30 }), { headers: noStore });
+      return NextResponse.json(await rpc("ventes_dashboard", { nb: 400 }), { headers: noStore });
     }
     if (view === "stats") {
       await checkPendingPayments().catch(() => 0);
