@@ -5,6 +5,13 @@ export default {
   // Les types sont vérifiés localement avant chaque déploiement ; le build ne doit pas échouer sur un avertissement de typage.
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  // Anciennes adresses de fiches renommées : redirection permanente vers la nouvelle adresse.
+  async redirects() {
+    return [
+      { source: "/produit/mini-scie-170w", destination: "/produit/disqueuse-meuleuse-pro-1700w", permanent: true },
+      { source: "/produit/laine-de-verre-isover-etics-35", destination: "/produit/laine-de-roche-isover-etics-35", permanent: true },
+    ];
+  },
   async headers() {
     return [
       { source: "/img/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }] },
